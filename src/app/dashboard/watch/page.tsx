@@ -10,7 +10,7 @@ import { useTransactions } from "@/hooks/use-transactions";
 export default function WatchPage() {
   const adWatchTime = 20; // 20 seconds
   const rewardAmount = 0.02; // R$ 0,02
-  const adUrl = "https://www.effectivegatecpm.com/u2kb7rcvi?key=1b2369148d1530ae3b0f8aa4f424c29a";
+  const adUrl = "https://www.google.com"; // Changed for demonstration purposes
 
   const { updateCredits } = useCredits();
   const { addTransaction } = useTransactions();
@@ -46,12 +46,12 @@ export default function WatchPage() {
   const handleStartReward = () => {
     const adWindow = window.open(adUrl, "_blank");
 
-    // Check if the window was blocked
+    // Check if the window was blocked or the link is invalid
     if (!adWindow || adWindow.closed || typeof adWindow.closed === "undefined") {
       toast({
         variant: "destructive",
-        title: "Ad Blocker Detectado",
-        description: "Por favor, desative seu bloqueador de anúncios e tente novamente.",
+        title: "Aviso",
+        description: "O anúncio não pôde ser aberto. Verifique seu bloqueador de anúncios ou se o link do provedor é válido.",
       });
       return;
     }
