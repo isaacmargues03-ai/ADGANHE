@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function WatchPage() {
   const adWatchTime = 20; // 20 seconds
   const rewardAmount = 0.50; // R$ 0,50
+  const adUrl = "https://www.effectivegatecpm.com/u2kb7rcvi?key=1b2369148d1530ae3b0f8aa4f424c29a";
 
   const { updateCredits } = useCredits();
   const { toast } = useToast();
@@ -40,6 +41,7 @@ export default function WatchPage() {
   }, [isWatching, countdown, updateCredits, toast, rewardAmount]);
 
   const handleStartReward = () => {
+    window.open(adUrl, '_blank', 'noopener,noreferrer');
     setIsWatching(true);
   };
 
@@ -48,7 +50,7 @@ export default function WatchPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Assista e Ganhe</h1>
         <p className="text-muted-foreground">
-          Clique no botão para iniciar o temporizador e ganhar sua recompensa. Os anúncios aparecerão automaticamente durante sua navegação.
+          Clique no botão para ver o anúncio e iniciar o temporizador para ganhar sua recompensa.
         </p>
       </div>
 
@@ -62,7 +64,7 @@ export default function WatchPage() {
           ) : (
             <>
               <Clapperboard className="mr-2 h-5 w-5" />
-              <span>Iniciar Recompensa</span>
+              <span>Ver Anúncio</span>
             </>
           )}
         </Button>
