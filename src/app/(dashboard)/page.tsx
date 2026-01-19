@@ -1,7 +1,7 @@
 import { CreditBalance } from "@/components/CreditBalance";
 import { PersonalizedAds } from "@/components/dashboard/PersonalizedAds";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { footballStats } from "@/lib/data";
+import { dashboardStats } from "@/lib/data";
 
 export default function DashboardPage() {
   return (
@@ -13,7 +13,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <CreditBalance />
-        {footballStats.map((stat, index) => (
+        {dashboardStats.map((stat, index) => (
           <StatCard key={index} {...stat} />
         ))}
       </div>

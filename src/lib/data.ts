@@ -1,27 +1,21 @@
-export const footballStats = [
+export const dashboardStats = [
   {
-    title: "Top Scorer",
-    value: "H. Kane",
-    team: "Bayern",
-    change: "+5% last week",
+    title: "Total Ads Watched",
+    value: "2,435",
+    icon: "clapperboard",
+    change: "+122 this month",
   },
   {
-    title: "Most Assists",
-    value: "K. De Bruyne",
-    team: "Man City",
-    change: "+2% last week",
+    title: "Total Credits Earned",
+    value: "316,250",
+    icon: "award",
+    change: "+12,500 this month",
   },
   {
-    title: "Clean Sheets",
-    value: "Alisson B.",
-    team: "Liverpool",
-    change: "+1 this week",
-  },
-  {
-    title: "Next Big Match",
-    value: "Barça vs Real",
-    team: "La Liga",
-    change: "In 3 days",
+    title: "Active Ad Campaigns",
+    value: "3",
+    icon: "trending-up",
+    change: "From our partners",
   },
 ];
 
