@@ -4,7 +4,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user of the AdEngage Platform.",
+      "description": "Represents a user of the ADGANHE Platform.",
       "properties": {
         "id": {
           "type": "string",
@@ -63,6 +63,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to support user authentication and management, a crucial foundation for the AdEngage platform. The structure focuses on secure and scalable data storage, optimized for the platform's key features, including dynamic indexing, ad network integration, and personalized ad recommendations. By structuring the data around users, the system can efficiently manage user profiles, authentication data, and any user-specific data added in the future.\n\n**Authorization Independence:** The current data structure focuses on user-specific data, which naturally provides authorization independence. Since the user document only contains user-related information, access control is straightforward and based on the `request.auth.uid` matching the `userId` in the path.\n\n**QAPs (Rules are not Filters):** The segregation of user data into individual documents under the `/users/{userId}` path ensures that list operations can be securely managed. Rules can efficiently restrict access to only the authenticated user's data without needing to filter based on document content."
+    "reasoning": "The Firestore structure is designed to support user authentication and management, a crucial foundation for the ADGANHE platform. The structure focuses on secure and scalable data storage, optimized for the platform's key features, including dynamic indexing, ad network integration, and personalized ad recommendations. By structuring the data around users, the system can efficiently manage user profiles, authentication data, and any user-specific data added in the future.\n\n**Authorization Independence:** The current data structure focuses on user-specific data, which naturally provides authorization independence. Since the user document only contains user-related information, access control is straightforward and based on the `request.auth.uid` matching the `userId` in the path.\n\n**QAPs (Rules are not Filters):** The segregation of user data into individual documents under the `/users/{userId}` path ensures that list operations can be securely managed. Rules can efficiently restrict access to only the authenticated user's data without needing to filter based on document content."
   }
 }

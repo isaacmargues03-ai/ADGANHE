@@ -10,7 +10,7 @@ export default function LoginPage() {
           <AppLogo className="size-10 mb-2 text-primary" />
           <h1 className="text-2xl font-bold">Bem-vindo(a) de volta!</h1>
           <p className="text-muted-foreground">
-            Faça login para continuar na AdEngage.
+            Faça login para continuar na ADGANHE.
           </p>
         </div>
         <AuthForm type="login" />

@@ -29,7 +29,7 @@ type WithdrawalRequest = {
   status: 'pending' | 'completed' | 'rejected';
 };
 
-const WITHDRAWALS_KEY = "adengage-withdrawal-requests";
+const WITHDRAWALS_KEY = "adganhe-withdrawal-requests";
 
 export default function WalletPage() {
   const [isWithdrawing, setIsWithdrawing] = useState(false);

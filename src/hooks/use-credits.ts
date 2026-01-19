@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@/firebase";
 
-const getBalanceKey = (userId: string) => `adengage-user-balance-${userId}`;
+const getBalanceKey = (userId: string) => `adganhe-user-balance-${userId}`;
 
 export function useCredits() {
   const { user, isUserLoading } = useUser();

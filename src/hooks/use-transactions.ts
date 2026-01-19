@@ -10,7 +10,7 @@ export type Transaction = {
   date: string;
 };
 
-const getTransactionsKey = (userId: string) => `adengage-transactions-${userId}`;
+const getTransactionsKey = (userId: string) => `adganhe-transactions-${userId}`;
 
 export function useTransactions() {
   const { user, isUserLoading } = useUser();

@@ -5,7 +5,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import Script from 'next/script';
 
 export const metadata: Metadata = {
-  title: 'AdEngage: Assista e Ganhe',
+  title: 'ADGANHE: Assista e Ganhe',
   description: 'Uma plataforma "Watch-to-Earn" que converte seu tempo em saldo real.',
 };
 

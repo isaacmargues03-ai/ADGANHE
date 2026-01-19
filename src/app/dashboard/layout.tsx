@@ -72,7 +72,7 @@ export default function DashboardLayout({
         <SidebarHeader>
           <div className="flex items-center gap-2">
             <AppLogo className="text-primary size-7" />
-            <span className="text-lg font-semibold">AdEngage</span>
+            <span className="text-lg font-semibold">ADGANHE</span>
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -125,7 +125,7 @@ export default function DashboardLayout({
           <SidebarTrigger />
           <div className="flex items-center gap-2">
             <AppLogo className="text-primary size-6" />
-            <span className="text-md font-semibold">AdEngage</span>
+            <span className="text-md font-semibold">ADGANHE</span>
           </div>
         </header>
         <main className="flex-1 p-4 md:p-6">{children}</main>
