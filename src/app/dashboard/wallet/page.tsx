@@ -47,10 +47,10 @@ export default function WalletPage() {
             <Card as="form" onSubmit={handleWithdraw}>
                 <CardHeader>
                     <CardTitle>Sacar Créditos</CardTitle>
-                    <CardDescription>Digite o valor para sacar.</CardDescription>
+                    <CardDescription>O valor mínimo para saque é de R$ 2,00.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Input type="number" placeholder="ex: 500" required />
+                    <Input type="number" placeholder="ex: 2.00" required min="2" step="0.01" />
                 </CardContent>
                 <CardFooter>
                     <Button className="w-full" disabled={isWithdrawing}>
