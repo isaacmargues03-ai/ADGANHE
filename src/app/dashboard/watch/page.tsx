@@ -10,7 +10,6 @@ import { useTransactions } from "@/hooks/use-transactions";
 export default function WatchPage() {
   const adWatchTime = 20; // 20 seconds
   const rewardAmount = 0.02; // R$ 0,02
-  const adUrl = "https://www.effectivegatecpm.com/u2kb7rcvi?key=1b2369148d1530ae3b0f8aa4f424c29a";
 
   const { updateCredits } = useCredits();
   const { addTransaction } = useTransactions();
@@ -44,18 +43,8 @@ export default function WatchPage() {
   }, [isWatching, countdown, updateCredits, toast, rewardAmount, addTransaction]);
 
   const handleStartReward = () => {
-    const adWindow = window.open(adUrl, '_blank', 'noopener,noreferrer');
-
-    // A simple check to see if the window was blocked by a pop-up/ad blocker.
-    if (!adWindow || adWindow.closed || typeof adWindow.closed === 'undefined') {
-      toast({
-        variant: "destructive",
-        title: "Bloqueador de Anúncios Detectado",
-        description: "Por favor, desative seu bloqueador de anúncios para ganhar recompensas.",
-      });
-      return; // Do not start the timer if the ad is blocked
-    }
-    
+    // The script in layout.tsx should handle showing ads.
+    // This button just starts the timer for the user to claim a reward.
     setIsWatching(true);
   };
 
@@ -64,7 +53,7 @@ export default function WatchPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Assista e Ganhe</h1>
         <p className="text-muted-foreground">
-          Clique no botão para ver o anúncio e iniciar o temporizador para ganhar sua recompensa.
+          Anúncios devem aparecer automaticamente enquanto você navega. Clique no botão para iniciar o temporizador e ganhar sua recompensa.
         </p>
       </div>
 
@@ -78,7 +67,7 @@ export default function WatchPage() {
           ) : (
             <>
               <Clapperboard className="mr-2 h-5 w-5" />
-              <span>Ver Anúncio</span>
+              <span>Ganhar Recompensa</span>
             </>
           )}
         </Button>
