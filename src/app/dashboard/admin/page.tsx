@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +21,8 @@ import { useToast } from "@/hooks/use-toast";
 import { withdrawalRequests as initialRequests } from "@/lib/data";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useUser } from "@/firebase";
+import { useRouter } from "next/navigation";
 
 type WithdrawalRequest = {
   id: string;
@@ -34,29 +35,42 @@ type WithdrawalRequest = {
 };
 
 const WITHDRAWALS_KEY = "adengage-withdrawal-requests";
+const ADMIN_EMAIL = "isaacmargues03@gmail.com";
 
 
 export default function AdminPage() {
   const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const { toast } = useToast();
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
 
+  // Effect for authorization and redirection
   useEffect(() => {
-    try {
-      const storedRequests = localStorage.getItem(WITHDRAWALS_KEY);
-      if (storedRequests) {
-        setRequests(JSON.parse(storedRequests));
-      } else {
-        localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(initialRequests));
-        setRequests(initialRequests);
-      }
-    } catch (error) {
-      console.error("Could not access localStorage:", error);
-      setRequests(initialRequests);
-    } finally {
-      setLoading(false);
+    if (!isUserLoading && (!user || user.email !== ADMIN_EMAIL)) {
+      router.replace('/dashboard');
     }
-  }, []);
+  }, [user, isUserLoading, router]);
+  
+  // Effect for loading data only for the admin
+  useEffect(() => {
+    if (user && user.email === ADMIN_EMAIL) {
+      try {
+        const storedRequests = localStorage.getItem(WITHDRAWALS_KEY);
+        if (storedRequests) {
+          setRequests(JSON.parse(storedRequests));
+        } else {
+          localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(initialRequests));
+          setRequests(initialRequests);
+        }
+      } catch (error) {
+        console.error("Could not access localStorage:", error);
+        setRequests(initialRequests);
+      } finally {
+        setDataLoading(false);
+      }
+    }
+  }, [user]);
 
   const handleRequest = (id: string, action: "approve" | "reject") => {
     const request = requests.find((r) => r.id === id);
@@ -88,9 +102,11 @@ export default function AdminPage() {
   const pendingRequests = requests.filter(req => req.status === 'pending');
   const processedRequests = requests.filter(req => req.status === 'completed' || req.status === 'rejected');
 
-  if (loading) {
+  // Guard clause: Show a full-page loader while checking auth or if user is not admin
+  // This prevents non-admins from seeing any content before redirection.
+  if (isUserLoading || !user || user.email !== ADMIN_EMAIL) {
      return (
-      <div className="flex h-64 w-full items-center justify-center">
+      <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -113,60 +129,66 @@ export default function AdminPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Usuário</TableHead>
-                <TableHead>Chave PIX</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pendingRequests.length > 0 ? (
-                pendingRequests.map((req) => (
-                  <TableRow key={req.id}>
-                    <TableCell>
-                      <div className="font-medium">{req.userName}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {req.userEmail}
-                      </div>
-                    </TableCell>
-                    <TableCell>{req.pixKey}</TableCell>
-                    <TableCell>{req.amount}</TableCell>
-                    <TableCell>{req.date}</TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-accent"
-                        onClick={() => handleRequest(req.id, "approve")}
-                      >
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Aprovar
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive"
-                        onClick={() => handleRequest(req.id, "reject")}
-                      >
-                        <XCircle className="mr-2 h-4 w-4" />
-                        Rejeitar
-                      </Button>
+          {dataLoading ? (
+            <div className="flex justify-center p-8">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Usuário</TableHead>
+                  <TableHead>Chave PIX</TableHead>
+                  <TableHead>Valor</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendingRequests.length > 0 ? (
+                  pendingRequests.map((req) => (
+                    <TableRow key={req.id}>
+                      <TableCell>
+                        <div className="font-medium">{req.userName}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {req.userEmail}
+                        </div>
+                      </TableCell>
+                      <TableCell>{req.pixKey}</TableCell>
+                      <TableCell>{req.amount}</TableCell>
+                      <TableCell>{req.date}</TableCell>
+                      <TableCell className="text-right space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-accent"
+                          onClick={() => handleRequest(req.id, "approve")}
+                        >
+                          <CheckCircle className="mr-2 h-4 w-4" />
+                          Aprovar
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive"
+                          onClick={() => handleRequest(req.id, "reject")}
+                        >
+                          <XCircle className="mr-2 h-4 w-4" />
+                          Rejeitar
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">
+                      Nenhuma solicitação pendente.
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    Nenhuma solicitação pendente.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
       
@@ -178,6 +200,11 @@ export default function AdminPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {dataLoading ? (
+             <div className="flex justify-center p-8">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : (
            <Table>
             <TableHeader>
               <TableRow>
@@ -217,6 +244,7 @@ export default function AdminPage() {
               )}
             </TableBody>
           </Table>
+          )}
         </CardContent>
       </Card>
     </div>

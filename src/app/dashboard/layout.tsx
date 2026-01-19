@@ -27,12 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppLogo } from "@/components/icons";
 import { useUser, useAuth } from "@/firebase";
 
-const menuItems = [
-  { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
-  { href: "/dashboard/watch", label: "Assistir Anúncios", icon: Clapperboard },
-  { href: "/dashboard/wallet", label: "Carteira", icon: Wallet },
-  { href: "/dashboard/admin", label: "Admin", icon: Shield },
-];
+const ADMIN_EMAIL = "isaacmargues03@gmail.com";
 
 export default function DashboardLayout({
   children,
@@ -43,6 +38,15 @@ export default function DashboardLayout({
   const router = useRouter();
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+
+  const menuItems = [
+    { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
+    { href: "/dashboard/watch", label: "Assistir Anúncios", icon: Clapperboard },
+    { href: "/dashboard/wallet", label: "Carteira", icon: Wallet },
+    ...(user?.email === ADMIN_EMAIL
+      ? [{ href: "/dashboard/admin", label: "Admin", icon: Shield }]
+      : []),
+  ];
 
   React.useEffect(() => {
     if (!isUserLoading && !user) {
