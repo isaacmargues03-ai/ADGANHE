@@ -28,6 +28,7 @@ type WithdrawalRequest = {
   userName: string;
   userEmail: string;
   amount: string;
+  pixKey: string;
   date: string;
   status: 'pending' | 'completed' | 'rejected';
 };
@@ -116,6 +117,7 @@ export default function AdminPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Usuário</TableHead>
+                <TableHead>Chave PIX</TableHead>
                 <TableHead>Valor</TableHead>
                 <TableHead>Data</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
@@ -131,6 +133,7 @@ export default function AdminPage() {
                         {req.userEmail}
                       </div>
                     </TableCell>
+                    <TableCell>{req.pixKey}</TableCell>
                     <TableCell>{req.amount}</TableCell>
                     <TableCell>{req.date}</TableCell>
                     <TableCell className="text-right space-x-2">
@@ -157,7 +160,7 @@ export default function AdminPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">
+                  <TableCell colSpan={5} className="text-center">
                     Nenhuma solicitação pendente.
                   </TableCell>
                 </TableRow>
@@ -179,6 +182,7 @@ export default function AdminPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Usuário</TableHead>
+                <TableHead>Chave PIX</TableHead>
                 <TableHead>Valor</TableHead>
                 <TableHead>Data</TableHead>
                 <TableHead className="text-right">Status</TableHead>
@@ -194,6 +198,7 @@ export default function AdminPage() {
                         {req.userEmail}
                       </div>
                     </TableCell>
+                    <TableCell>{req.pixKey}</TableCell>
                     <TableCell>{req.amount}</TableCell>
                     <TableCell>{req.date}</TableCell>
                     <TableCell className="text-right">
@@ -205,7 +210,7 @@ export default function AdminPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">
+                  <TableCell colSpan={5} className="text-center">
                     Nenhum saque processado ainda.
                   </TableCell>
                 </TableRow>

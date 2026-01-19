@@ -23,6 +23,7 @@ type WithdrawalRequest = {
   userName: string;
   userEmail: string;
   amount: string;
+  pixKey: string;
   date: string;
   status: 'pending' | 'completed' | 'rejected';
 };
@@ -32,6 +33,7 @@ const WITHDRAWALS_KEY = "adengage-withdrawal-requests";
 export default function WalletPage() {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [amount, setAmount] = useState("");
+  const [pixKey, setPixKey] = useState("");
   const { toast } = useToast();
   const { user } = useUser();
   const { credits, updateCredits, loading: creditsLoading } = useCredits();
@@ -61,6 +63,15 @@ export default function WalletPage() {
       return;
     }
 
+    if (!pixKey) {
+        toast({
+            variant: "destructive",
+            title: "Chave PIX Inválida",
+            description: "Por favor, insira sua chave PIX.",
+        });
+        return;
+    }
+
     if (withdrawAmount > credits) {
       toast({
         variant: "destructive",
@@ -77,6 +88,7 @@ export default function WalletPage() {
       userName: user.displayName || user.email || "Usuário Anônimo",
       userEmail: user.email || "Não informado",
       amount: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(withdrawAmount),
+      pixKey: pixKey,
       date: new Intl.DateTimeFormat('pt-BR').format(new Date()),
       status: 'pending',
     };
@@ -89,6 +101,7 @@ export default function WalletPage() {
 
       updateCredits(-withdrawAmount);
       setAmount("");
+      setPixKey("");
       toast({
         title: "Saque Solicitado",
         description: "Sua solicitação foi recebida e está sendo processada.",
@@ -119,9 +132,10 @@ export default function WalletPage() {
               <form onSubmit={handleWithdraw}>
                 <CardHeader>
                     <CardTitle>Sacar Créditos</CardTitle>
-                    <CardDescription>O valor mínimo para saque é de R$ 2,00.</CardDescription>
+                    <CardDescription>O valor mínimo para saque é de R$ 2,00. Insira sua chave PIX.</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  <div className="space-y-4">
                     <Input 
                       type="number" 
                       placeholder="ex: 2.00" 
@@ -132,9 +146,18 @@ export default function WalletPage() {
                       onChange={(e) => setAmount(e.target.value)}
                       disabled={isWithdrawing || creditsLoading}
                     />
+                     <Input 
+                      type="text" 
+                      placeholder="Sua chave PIX" 
+                      required 
+                      value={pixKey}
+                      onChange={(e) => setPixKey(e.target.value)}
+                      disabled={isWithdrawing || creditsLoading}
+                    />
+                  </div>
                 </CardContent>
                 <CardFooter>
-                    <Button type="submit" className="w-full" disabled={isWithdrawing || creditsLoading || !amount}>
+                    <Button type="submit" className="w-full" disabled={isWithdrawing || creditsLoading || !amount || !pixKey}>
                         {isWithdrawing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Banknote className="mr-2 h-4 w-4" />}
                         Solicitar Saque
                     </Button>
