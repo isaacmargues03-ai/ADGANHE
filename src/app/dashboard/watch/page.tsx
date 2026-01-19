@@ -61,14 +61,17 @@ export default function WatchPage() {
         </div>
         
         {cliques < totalNecessario ? (
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-4">
                 <Button 
                   onClick={handleAnuncio}
                   size="lg"
                 >
                   {cliques === 0 ? "Começar Tarefa" : "Ver Próximo Anúncio"}
                 </Button>
-                <p className="text-xs text-muted-foreground">Acesse a página, aguarde o site abrir e volte.</p>
+                <div className="text-center">
+                    <p className="text-xs text-muted-foreground">Acesse a página, aguarde o site abrir e volte.</p>
+                    <p className="text-lg font-bold text-destructive mt-2">PROIBIDO ANTI ADS</p>
+                </div>
             </div>
         ) : (
             <Button 
