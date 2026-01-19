@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "ad-banner-1",
+      "description": "Abstract ad banner",
+      "imageUrl": "https://images.unsplash.com/photo-1711779323778-fe89eef8f580?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhZHZlcnRpc2VtZW50JTIwYWJzdHJhY3R8ZW58MHx8fHwxNzY4ODM5OTUzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "advertisement abstract"
+    },
+    {
+      "id": "ad-banner-2",
+      "description": "Colorful ad banner",
+      "imageUrl": "https://images.unsplash.com/photo-1642480532034-362360552ccb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxhZHZlcnRpc2VtZW50JTIwY29sb3JmdWx8ZW58MHx8fHwxNzY4ODM5OTUzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "advertisement colorful"
+    },
+    {
+      "id": "ad-banner-3",
+      "description": "Tech ad banner",
+      "imageUrl": "https://images.unsplash.com/photo-1549947998-e68fc0831707?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhZHZlcnRpc2VtZW50JTIwdGVjaG5vbG9neXxlbnwwfHx8fDE3Njg4Mzk5NTN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "advertisement technology"
+    },
+    {
+      "id": "user-avatar-1",
+      "description": "User avatar",
+      "imageUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3Njg3NzQ4OTN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person portrait"
+    }
+  ]
 }
