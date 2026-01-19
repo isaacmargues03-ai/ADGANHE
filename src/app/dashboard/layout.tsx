@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   SidebarProvider,
   Sidebar,
@@ -18,12 +18,15 @@ import {
 import {
   Clapperboard,
   LayoutDashboard,
+  LogOut,
   Settings,
   User,
   Wallet,
+  Loader2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppLogo } from "@/components/icons";
+import { useUser, useAuth } from "@/firebase";
 
 const menuItems = [
   { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
@@ -38,6 +41,27 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+
+  React.useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.replace("/login");
+    }
+  }, [isUserLoading, user, router]);
+
+  const handleLogout = () => {
+    auth.signOut();
+  };
+
+  if (isUserLoading || !user) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -77,17 +101,23 @@ export default function DashboardLayout({
               <SidebarMenuButton tooltip="Perfil do Usuário">
                 <Avatar className="size-7">
                   <AvatarImage
-                    src="https://picsum.photos/seed/avatar/100/100"
-                    alt="Usuário"
+                    src={user.photoURL ?? "https://picsum.photos/seed/avatar/100/100"}
+                    alt={user.displayName ?? "Usuário"}
                   />
-                  <AvatarFallback>U</AvatarFallback>
+                  <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col text-left">
-                  <span>Usuário</span>
+                  <span>{user.displayName ?? "Usuário"}</span>
                   <span className="text-xs text-sidebar-foreground/70">
-                    usuario@exemplo.com
+                    {user.email}
                   </span>
                 </div>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={handleLogout} tooltip="Sair">
+                <LogOut />
+                <span>Sair</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
