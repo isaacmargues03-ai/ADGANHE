@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Clapperboard, Loader2 } from "lucide-react";
 import { useCredits } from "@/hooks/use-credits";
 import { useToast } from "@/hooks/use-toast";
+import { useTransactions } from "@/hooks/use-transactions";
 
 export default function WatchPage() {
   const adWatchTime = 20; // 20 seconds
@@ -12,6 +13,7 @@ export default function WatchPage() {
   const adUrl = "https://www.effectivegatecpm.com/u2kb7rcvi?key=1b2369148d1530ae3b0f8aa4f424c29a";
 
   const { updateCredits } = useCredits();
+  const { addTransaction } = useTransactions();
   const { toast } = useToast();
 
   const [countdown, setCountdown] = useState<number>(adWatchTime);
@@ -31,6 +33,7 @@ export default function WatchPage() {
     if (isWatching && countdown === 0) {
       setIsWatching(false);
       updateCredits(rewardAmount);
+      addTransaction({ description: "Recompensa de anúncio", amount: rewardAmount });
       toast({
         title: "Recompensa Recebida!",
         description: `Você ganhou R$ ${rewardAmount.toFixed(2)}.`,
@@ -38,7 +41,7 @@ export default function WatchPage() {
       // Reset for next watch
       setTimeout(() => setCountdown(adWatchTime), 1000);
     }
-  }, [isWatching, countdown, updateCredits, toast, rewardAmount]);
+  }, [isWatching, countdown, updateCredits, toast, rewardAmount, addTransaction]);
 
   const handleStartReward = () => {
     window.open(adUrl, '_blank', 'noopener,noreferrer');

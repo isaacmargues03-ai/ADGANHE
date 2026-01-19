@@ -12,11 +12,12 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { transactionHistory, withdrawalRequests as initialRequests } from "@/lib/data";
+import { withdrawalRequests as initialRequests } from "@/lib/data";
 import { ArrowDown, ArrowUp, Banknote, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useUser } from "@/firebase";
 import { useCredits } from "@/hooks/use-credits";
+import { useTransactions } from "@/hooks/use-transactions";
 
 type WithdrawalRequest = {
   id: string;
@@ -37,6 +38,7 @@ export default function WalletPage() {
   const { toast } = useToast();
   const { user } = useUser();
   const { credits, updateCredits, loading: creditsLoading } = useCredits();
+  const { transactions, addTransaction, loading: transactionsLoading } = useTransactions();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -100,6 +102,7 @@ export default function WalletPage() {
       localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(updatedRequests));
 
       updateCredits(-withdrawAmount);
+      addTransaction({ description: "Solicitação de saque", amount: -withdrawAmount });
       setAmount("");
       setPixKey("");
       toast({
@@ -172,36 +175,46 @@ export default function WalletPage() {
           <CardTitle>Histórico de Transações</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4">
-          {transactionHistory.map((txn) => (
-            <div key={txn.id} className="flex items-center">
-              <div
-                className={`p-2 rounded-full mr-3 ${
-                  txn.amount.startsWith("+")
-                    ? "bg-accent/20 text-accent"
-                    : "bg-destructive/20 text-destructive"
-                }`}
-              >
-                {txn.amount.startsWith("+") ? (
-                  <ArrowUp className="h-4 w-4" />
-                ) : (
-                  <ArrowDown className="h-4 w-4" />
-                )}
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-sm">{txn.description}</p>
-                <p className="text-xs text-muted-foreground">{txn.date}</p>
-              </div>
-              <p
-                className={`font-semibold text-sm ${
-                  txn.amount.startsWith("+")
-                    ? "text-accent"
-                    : "text-destructive"
-                }`}
-              >
-                {txn.amount}
-              </p>
+          {transactionsLoading ? (
+            <div className="flex justify-center items-center h-full">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ))}
+          ) : transactions.length > 0 ? (
+            transactions.map((txn) => (
+              <div key={txn.id} className="flex items-center">
+                <div
+                  className={`p-2 rounded-full mr-3 ${
+                    txn.amount >= 0
+                      ? "bg-accent/20 text-accent"
+                      : "bg-destructive/20 text-destructive"
+                  }`}
+                >
+                  {txn.amount >= 0 ? (
+                    <ArrowUp className="h-4 w-4" />
+                  ) : (
+                    <ArrowDown className="h-4 w-4" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm">{txn.description}</p>
+                  <p className="text-xs text-muted-foreground">{txn.date}</p>
+                </div>
+                <p
+                  className={`font-semibold text-sm ${
+                    txn.amount >= 0
+                      ? "text-accent"
+                      : "text-destructive"
+                  }`}
+                >
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(txn.amount)}
+                </p>
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-sm text-muted-foreground py-10">
+              Nenhuma transação encontrada.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
