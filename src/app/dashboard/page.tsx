@@ -1,0 +1,28 @@
+import { CreditBalance } from "@/components/CreditBalance";
+import { PersonalizedAds } from "@/components/dashboard/PersonalizedAds";
+import { StatCard } from "@/components/dashboard/StatCard";
+import { footballStats } from "@/lib/data";
+
+export default function DashboardPage() {
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Welcome Back!</h1>
+        <p className="text-muted-foreground">Here's your engagement overview.</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <CreditBalance />
+        {footballStats.map((stat, index) => (
+          <StatCard key={index} {...stat} />
+        ))}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <div className="col-span-full">
+            <PersonalizedAds />
+        </div>
+      </div>
+    </div>
+  );
+}
