@@ -17,11 +17,19 @@ export default function WatchPage() {
   const adUrl = "https://otieu.com/4/10488966";
 
   const handleAnuncio = () => {
-    // Abre o seu link da Monetag
-    window.open(adUrl, '_blank');
+    const newWindow = window.open(adUrl, '_blank');
     
-    // Aumenta o contador de cliques
-    setCliques(prev => prev + 1);
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+      // Pop-up foi bloqueado
+      toast({
+        variant: "destructive",
+        title: "Pop-up Bloqueado",
+        description: "Por favor, desative seu bloqueador de anúncios para completar a tarefa.",
+      });
+    } else {
+      // Aumenta o contador de cliques
+      setCliques(prev => prev + 1);
+    }
   };
 
   const resgatarRecompensa = () => {
