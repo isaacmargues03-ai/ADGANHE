@@ -13,7 +13,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
@@ -22,8 +21,6 @@ import { Textarea } from "@/components/ui/textarea";
 const PROFILE_KEY = "adengage-user-profile";
 
 const profileFormSchema = z.object({
-  favoriteTeam: z.string().max(50).optional(),
-  playerToWatch: z.string().max(50).optional(),
   interests: z.string().max(200).optional(),
 });
 
@@ -35,8 +32,6 @@ export default function ProfilePage() {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      favoriteTeam: "",
-      playerToWatch: "",
       interests: "",
     },
   });
@@ -79,57 +74,25 @@ export default function ProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Preferências de Futebol</CardTitle>
+          <CardTitle>Suas Preferências</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <FormField
                 control={form.control}
-                name="favoriteTeam"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Time de Futebol Favorito</FormLabel>
-                    <FormControl>
-                      <Input placeholder="ex: Manchester United" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Isso nos ajuda a encontrar anúncios relacionados ao seu time.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="playerToWatch"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Um Jogador que Você Acompanha</FormLabel>
-                    <FormControl>
-                      <Input placeholder="ex: Cristiano Ronaldo" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Receba recomendações sobre conteúdo patrocinado por jogadores.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
                 name="interests"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Outros Interesses</FormLabel>
+                    <FormLabel>Seus Interesses</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="ex: Futebol Fantasia, apostas esportivas, camisas de futebol..."
+                        placeholder="ex: Tecnologia, jogos, culinária..."
                         {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      Conte-nos mais sobre o que você gosta.
+                      Conte-nos mais sobre o que você gosta para receber anúncios mais relevantes.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

@@ -23,7 +23,6 @@ export default function RootLayout({
       <body className="font-body antialiased">
         {children}
         <Toaster />
-        <Script src="https://pl28480612.effectivegatecpm.com/31/82/6a/31826a023155a801f37c5ba2389004c5.js" />
       </body>
     </html>
   );
