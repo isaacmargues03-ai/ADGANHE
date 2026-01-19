@@ -20,7 +20,6 @@ import {
   LayoutDashboard,
   LogOut,
   Settings,
-  User,
   Wallet,
   Loader2,
 } from "lucide-react";
@@ -32,7 +31,6 @@ const menuItems = [
   { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
   { href: "/dashboard/watch", label: "Assistir Anúncios", icon: Clapperboard },
   { href: "/dashboard/wallet", label: "Carteira", icon: Wallet },
-  { href: "/dashboard/profile", label: "Perfil", icon: User },
 ];
 
 export default function DashboardLayout({
