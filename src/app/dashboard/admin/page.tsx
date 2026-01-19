@@ -20,32 +20,80 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { withdrawalRequests as initialRequests } from "@/lib/data";
-import { CheckCircle, XCircle } from "lucide-react";
-import { useState } from "react";
+import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+
+type WithdrawalRequest = {
+  id: string;
+  userName: string;
+  userEmail: string;
+  amount: string;
+  date: string;
+  status: 'pending' | 'completed' | 'rejected';
+};
+
+const WITHDRAWALS_KEY = "adengage-withdrawal-requests";
+
 
 export default function AdminPage() {
-  const [requests, setRequests] = useState(initialRequests);
+  const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    try {
+      const storedRequests = localStorage.getItem(WITHDRAWALS_KEY);
+      if (storedRequests) {
+        setRequests(JSON.parse(storedRequests));
+      } else {
+        localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(initialRequests));
+        setRequests(initialRequests);
+      }
+    } catch (error) {
+      console.error("Could not access localStorage:", error);
+      setRequests(initialRequests);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const handleRequest = (id: string, action: "approve" | "reject") => {
     const request = requests.find((r) => r.id === id);
     if (!request) return;
     
-    // Here you would typically call an API to process the request.
-    // For this example, we'll just update the local state.
-    
-    setRequests((prev) =>
-      prev.filter((r) => r.id !== id)
+    const newStatus = action === "approve" ? "completed" : "rejected";
+
+    const updatedRequests = requests.map((r) =>
+      r.id === id ? { ...r, status: newStatus } : r
     );
 
-    toast({
-      title: `Solicitação ${action === "approve" ? "Aprovada" : "Rejeitada"}`,
-      description: `O saque de ${request.amount} para ${request.userName} foi processado.`,
-    });
+    try {
+      localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(updatedRequests));
+      setRequests(updatedRequests);
+      toast({
+        title: `Solicitação ${newStatus === "completed" ? "Aprovada" : "Rejeitada"}`,
+        description: `O saque de ${request.amount} para ${request.userName} foi processado.`,
+      });
+    } catch (error) {
+       console.error("Failed to update request:", error);
+       toast({
+           variant: "destructive",
+           title: "Erro",
+           description: "Não foi possível atualizar a solicitação.",
+       });
+    }
   };
 
   const pendingRequests = requests.filter(req => req.status === 'pending');
-  const completedRequests = requests.filter(req => req.status === 'completed');
+  const processedRequests = requests.filter(req => req.status === 'completed' || req.status === 'rejected');
+
+  if (loading) {
+     return (
+      <div className="flex h-64 w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -137,8 +185,8 @@ export default function AdminPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {completedRequests.length > 0 ? (
-                completedRequests.map((req) => (
+              {processedRequests.length > 0 ? (
+                processedRequests.sort((a, b) => new Date(b.date.split('/').reverse().join('-')).getTime() - new Date(a.date.split('/').reverse().join('-')).getTime()).map((req) => (
                   <TableRow key={req.id}>
                     <TableCell>
                       <div className="font-medium">{req.userName}</div>
@@ -149,7 +197,9 @@ export default function AdminPage() {
                     <TableCell>{req.amount}</TableCell>
                     <TableCell>{req.date}</TableCell>
                     <TableCell className="text-right">
-                       <Badge variant="outline" className="text-accent border-accent">Completo</Badge>
+                       <Badge variant={req.status === 'completed' ? 'outline' : 'destructive'} className={req.status === 'completed' ? 'text-accent border-accent' : ''}>
+                         {req.status === 'completed' ? 'Completo' : 'Rejeitado'}
+                       </Badge>
                     </TableCell>
                   </TableRow>
                 ))

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { CreditBalance } from "@/components/CreditBalance";
@@ -12,26 +13,96 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { transactionHistory } from "@/lib/data";
+import { transactionHistory, withdrawalRequests as initialRequests } from "@/lib/data";
 import { ArrowDown, ArrowUp, Banknote, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useUser } from "@/firebase";
+import { useCredits } from "@/hooks/use-credits";
+
+type WithdrawalRequest = {
+  id: string;
+  userName: string;
+  userEmail: string;
+  amount: string;
+  date: string;
+  status: 'pending' | 'completed' | 'rejected';
+};
+
+const WITHDRAWALS_KEY = "adengage-withdrawal-requests";
 
 export default function WalletPage() {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [amount, setAmount] = useState("");
   const { toast } = useToast();
+  const { user } = useUser();
+  const { credits, updateCredits, loading: creditsLoading } = useCredits();
+
+  useEffect(() => {
+    if (localStorage.getItem(WITHDRAWALS_KEY) === null) {
+      localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(initialRequests));
+    }
+  }, []);
+
 
   const handleWithdraw = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsWithdrawing(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsWithdrawing(false);
+    if (!user || credits === null) return;
+
+    const withdrawAmount = parseFloat(amount);
+    
+    if (isNaN(withdrawAmount) || withdrawAmount < 2) {
       toast({
-        title: "Saque Iniciado",
-        description:
-          "Sua solicitação foi recebida e está sendo processada.",
+        variant: "destructive",
+        title: "Valor Inválido",
+        description: "O valor mínimo para saque é de R$ 2,00.",
       });
-    }, 2000);
+      return;
+    }
+
+    if (withdrawAmount > credits) {
+      toast({
+        variant: "destructive",
+        title: "Saldo Insuficiente",
+        description: "Você não tem créditos suficientes para este saque.",
+      });
+      return;
+    }
+
+    setIsWithdrawing(true);
+
+    const newRequest: WithdrawalRequest = {
+      id: `req${Date.now()}`,
+      userName: user.displayName || user.email || "Usuário Anônimo",
+      userEmail: user.email || "Não informado",
+      amount: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(withdrawAmount),
+      date: new Intl.DateTimeFormat('pt-BR').format(new Date()),
+      status: 'pending',
+    };
+
+    setTimeout(() => {
+      try {
+        const storedRequests = localStorage.getItem(WITHDRAWALS_KEY);
+        const requests = storedRequests ? JSON.parse(storedRequests) : [];
+        const updatedRequests = [newRequest, ...requests];
+        localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(updatedRequests));
+
+        updateCredits(-withdrawAmount);
+        setAmount("");
+        setIsWithdrawing(false);
+        toast({
+          title: "Saque Solicitado",
+          description: "Sua solicitação foi recebida e está sendo processada.",
+        });
+      } catch (error) {
+        console.error("Failed to process withdrawal:", error);
+        setIsWithdrawing(false);
+        toast({
+            variant: "destructive",
+            title: "Erro ao Processar",
+            description: "Não foi possível processar sua solicitação. Tente novamente.",
+        });
+      }
+    }, 1500);
   };
   return (
     <div className="grid gap-6 lg:grid-cols-3">
@@ -50,10 +121,19 @@ export default function WalletPage() {
                     <CardDescription>O valor mínimo para saque é de R$ 2,00.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Input type="number" placeholder="ex: 2.00" required min="2" step="0.01" />
+                    <Input 
+                      type="number" 
+                      placeholder="ex: 2.00" 
+                      required 
+                      min="2" 
+                      step="0.01"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      disabled={isWithdrawing || creditsLoading}
+                    />
                 </CardContent>
                 <CardFooter>
-                    <Button className="w-full" disabled={isWithdrawing}>
+                    <Button className="w-full" disabled={isWithdrawing || creditsLoading || !amount}>
                         {isWithdrawing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Banknote className="mr-2 h-4 w-4" />}
                         Solicitar Saque
                     </Button>
