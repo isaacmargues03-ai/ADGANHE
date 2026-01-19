@@ -29,7 +29,7 @@ export default function RootLayout({
             gtag('config', 'G-1234567890');
           `}
         </Script>
-        <Script async type="application/javascript" src="https://www.effectivegatecpm.com/u2kb7rcvi?key=1b2369148d1530ae3b0f8aa4f424c29a"></Script>
+        <script src="https://pl28480612.effectivegatecpm.com/31/82/6a/31826a023155a801f37c5ba2389004c5.js"></script>
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
