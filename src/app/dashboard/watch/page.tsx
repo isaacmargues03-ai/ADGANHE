@@ -8,53 +8,45 @@ import { useToast } from "@/hooks/use-toast";
 import { useTransactions } from "@/hooks/use-transactions";
 
 export default function WatchPage() {
-  const adWatchTime = 20; // 20 seconds
-  const rewardAmount = 0.02; // R$ 0,02
+  const adWatchTime = 20;
+  const rewardAmount = 0.02;
   const adUrl = "https://otieu.com/4/10488966";
 
   const { updateCredits } = useCredits();
   const { addTransaction } = useTransactions();
   const { toast } = useToast();
 
-  const [countdown, setCountdown] = useState<number>(adWatchTime);
-  const [isWatching, setIsWatching] = useState(false);
+  const [adOpened, setAdOpened] = useState(false);
+  const [countdown, setCountdown] = useState(adWatchTime);
+  const [canClaim, setCanClaim] = useState(false);
 
   useEffect(() => {
-    if (!isWatching || countdown <= 0) return;
-
-    const timer = setTimeout(() => {
-      setCountdown((prev) => prev - 1);
-    }, 1000);
-
+    let timer: NodeJS.Timeout;
+    if (adOpened && countdown > 0) {
+      timer = setTimeout(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    } else if (adOpened && countdown === 0) {
+      setCanClaim(true);
+    }
     return () => clearTimeout(timer);
-  }, [isWatching, countdown]);
+  }, [adOpened, countdown]);
 
-  useEffect(() => {
-    if (isWatching && countdown === 0) {
-      setIsWatching(false);
-      updateCredits(rewardAmount);
-      addTransaction({ description: "Recompensa de anúncio", amount: rewardAmount });
-      toast({
-        title: "Recompensa Recebida!",
-        description: `Você ganhou R$ ${rewardAmount.toFixed(2)}.`,
-      });
-      // Reset for next watch
-      setTimeout(() => setCountdown(adWatchTime), 1000);
-    }
-  }, [isWatching, countdown, updateCredits, toast, rewardAmount, addTransaction]);
+  const handleOpenAd = () => {
+    setAdOpened(true);
+  };
 
-  const handleStartReward = () => {
-    const adWindow = window.open(adUrl, '_blank', 'noopener,noreferrer');
-    
-    if (!adWindow || adWindow.closed || typeof adWindow.closed === 'undefined') {
-        toast({
-            variant: "destructive",
-            title: "Pop-up Bloqueado",
-            description: "Por favor, desative seu bloqueador de anúncios para continuar.",
-        });
-    } else {
-        setIsWatching(true);
-    }
+  const handleClaimReward = () => {
+    updateCredits(rewardAmount);
+    addTransaction({ description: "Recompensa de anúncio", amount: rewardAmount });
+    toast({
+      title: "Recompensa Coletada!",
+      description: `Você ganhou R$ ${rewardAmount.toFixed(2)}.`,
+    });
+    // Reset state
+    setAdOpened(false);
+    setCountdown(adWatchTime);
+    setCanClaim(false);
   };
 
   return (
@@ -62,21 +54,38 @@ export default function WatchPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Assista e Ganhe</h1>
         <p className="text-muted-foreground">
-          Clique no botão abaixo para ver um anúncio e iniciar o temporizador para ganhar sua recompensa.
+          Siga os passos abaixo para ganhar sua recompensa.
         </p>
       </div>
 
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center gap-8">
-        <Button size="lg" onClick={handleStartReward} disabled={isWatching}>
-          {isWatching ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              <span>Aguarde {countdown}s...</span>
-            </>
-          ) : (
-            "GANHAR SALDO"
-          )}
-        </Button>
+        {!adOpened ? (
+          <>
+            <p className="text-muted-foreground">Passo 1: Abra o anúncio em uma nova aba.</p>
+            <Button asChild size="lg">
+              <a href={adUrl} target="_blank" rel="noopener noreferrer" onClick={handleOpenAd}>
+                ABRIR ANÚNCIO
+              </a>
+            </Button>
+          </>
+        ) : (
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-muted-foreground">Passo 2: Aguarde o tempo acabar e colete sua recompensa.</p>
+             <div className="flex items-center gap-2 text-2xl font-bold">
+               {canClaim ? (
+                 <span>Pode coletar!</span>
+               ) : (
+                 <>
+                   <Loader2 className="h-6 w-6 animate-spin" />
+                   <span>Aguarde {countdown}s...</span>
+                 </>
+               )}
+            </div>
+            <Button size="lg" onClick={handleClaimReward} disabled={!canClaim}>
+              COLETAR RECOMPENSA
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
