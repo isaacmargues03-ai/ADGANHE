@@ -16,12 +16,12 @@ export function PersonalizedAds() {
   const { toast } = useToast();
 
   const getAds = () => {
-    let userProfile = "Loves football, particularly the Premier League. Favorite team is Manchester United.";
+    let userProfile = "Adora futebol, principalmente a Premier League. Time favorito é o Manchester United.";
     try {
         const storedProfile = localStorage.getItem(PROFILE_KEY);
         if (storedProfile) {
             const parsed = JSON.parse(storedProfile);
-            userProfile = `Favorite team: ${parsed.favoriteTeam || 'N/A'}. Player to watch: ${parsed.playerToWatch || 'N/A'}. Interests: ${parsed.interests || 'General football fan'}.`
+            userProfile = `Time favorito: ${parsed.favoriteTeam || 'N/A'}. Jogador para observar: ${parsed.playerToWatch || 'N/A'}. Interesses: ${parsed.interests || 'Fã de futebol em geral'}.`
         }
     } catch (e) {
         console.warn("Could not read user profile from localStorage.");
@@ -30,12 +30,12 @@ export function PersonalizedAds() {
 
     setError(null);
     startTransition(async () => {
-      const result = await generateAds({ userProfile, scoutAIStatistics: "High engagement with Champions League highlights." });
+      const result = await generateAds({ userProfile, scoutAIStatistics: "Alto engajamento com destaques da Champions League." });
       if ("error" in result) {
         setError(result.error);
         toast({
           variant: "destructive",
-          title: "Error",
+          title: "Erro",
           description: result.error,
         });
       } else {
@@ -54,11 +54,11 @@ export function PersonalizedAds() {
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-2">
             <Wand2 className="h-5 w-5 text-primary" />
-            <CardTitle>For You: Recommended Ads</CardTitle>
+            <CardTitle>Para Você: Anúncios Recomendados</CardTitle>
         </div>
         <Button onClick={getAds} disabled={isPending} size="sm">
           {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-          Refresh
+          Atualizar
         </Button>
       </CardHeader>
       <CardContent>
@@ -82,7 +82,7 @@ export function PersonalizedAds() {
           </ul>
         ) : (
           <div className="flex flex-col items-center justify-center p-8 text-muted-foreground">
-            <p>No recommendations available. Try refreshing!</p>
+            <p>Nenhuma recomendação disponível. Tente atualizar!</p>
           </div>
         )}
       </CardContent>

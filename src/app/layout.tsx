@@ -1,10 +1,11 @@
 import type {Metadata} from 'next';
+import Script from 'next/script';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'AdEngage Platform',
-  description: 'A platform for monetizing and engaging with rewarded ads.',
+  title: 'Plataforma AdEngage',
+  description: 'Uma plataforma para monetizar e engajar com anúncios recompensados.',
 };
 
 export default function RootLayout({
@@ -13,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="pt-BR" className="dark">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         {children}
         <Toaster />
+        <Script src="https://pl28480612.effectivegatecpm.com/31/82/6a/31826a023155a801f37c5ba2389004c5.js" />
       </body>
     </html>
   );

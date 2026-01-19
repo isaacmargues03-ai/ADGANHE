@@ -26,10 +26,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppLogo } from "@/components/icons";
 
 const menuItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/watch", label: "Watch Ads", icon: Clapperboard },
-  { href: "/dashboard/wallet", label: "Wallet", icon: Wallet },
-  { href: "/dashboard/profile", label: "Profile", icon: User },
+  { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
+  { href: "/dashboard/watch", label: "Assistir Anúncios", icon: Clapperboard },
+  { href: "/dashboard/wallet", label: "Carteira", icon: Wallet },
+  { href: "/dashboard/profile", label: "Perfil", icon: User },
 ];
 
 export default function DashboardLayout({
@@ -68,24 +68,24 @@ export default function DashboardLayout({
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Settings">
+              <SidebarMenuButton tooltip="Configurações">
                 <Settings />
-                <span>Settings</span>
+                <span>Configurações</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="User Profile">
+              <SidebarMenuButton tooltip="Perfil do Usuário">
                 <Avatar className="size-7">
                   <AvatarImage
                     src="https://picsum.photos/seed/avatar/100/100"
-                    alt="User"
+                    alt="Usuário"
                   />
                   <AvatarFallback>U</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col text-left">
-                  <span>User</span>
+                  <span>Usuário</span>
                   <span className="text-xs text-sidebar-foreground/70">
-                    user@example.com
+                    usuario@exemplo.com
                   </span>
                 </div>
               </SidebarMenuButton>

@@ -33,7 +33,7 @@ export function AdCard({ title, description, reward, onWatch }: AdCardProps) {
       <CardFooter>
         <Button onClick={onWatch} className="w-full">
           <Clapperboard className="mr-2 h-4 w-4" />
-          Watch Now
+          Assista Agora
         </Button>
       </CardFooter>
     </Card>

@@ -34,7 +34,7 @@ export function AdPlayer({ duration, imageUrl, onComplete }: AdPlayerProps) {
       <div className="relative w-full aspect-video overflow-hidden rounded-lg">
         <Image
           src={imageUrl}
-          alt="Advertisement"
+          alt="Anúncio"
           fill
           className="object-cover"
           data-ai-hint="advertisement abstract"
@@ -45,8 +45,8 @@ export function AdPlayer({ duration, imageUrl, onComplete }: AdPlayerProps) {
         <Progress value={progress} className="w-full h-2" />
         <p className="text-center text-sm text-muted-foreground">
           {isComplete
-            ? "Ad finished! Claim your reward."
-            : `Ad playing... ${Math.max(0, duration - Math.floor((progress/100)*duration))}s remaining`}
+            ? "Anúncio finalizado! Resgate sua recompensa."
+            : `Anúncio em andamento... ${Math.max(0, duration - Math.floor((progress/100)*duration))}s restantes`}
         </p>
       </div>
 
@@ -57,7 +57,7 @@ export function AdPlayer({ duration, imageUrl, onComplete }: AdPlayerProps) {
         size="lg"
       >
         <Award className="mr-2 h-5 w-5" />
-        Claim Reward
+        Resgatar Recompensa
       </Button>
     </div>
   );

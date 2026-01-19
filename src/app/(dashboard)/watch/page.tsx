@@ -28,8 +28,8 @@ export default function WatchPage() {
     if (selectedAd) {
       updateCredits(selectedAd.reward);
       toast({
-        title: "Reward Claimed!",
-        description: `You've earned ${selectedAd.reward} credits.`,
+        title: "Recompensa Resgatada!",
+        description: `Você ganhou ${selectedAd.reward} créditos.`,
       });
       setSelectedAd(null);
     }
@@ -39,9 +39,9 @@ export default function WatchPage() {
     <>
       <div className="flex flex-col gap-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Watch & Earn</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Assista e Ganhe</h1>
           <p className="text-muted-foreground">
-            Complete ad views to earn credits.
+            Complete as visualizações de anúncios para ganhar créditos.
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

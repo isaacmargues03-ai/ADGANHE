@@ -1,45 +1,45 @@
 export const dashboardStats = [
   {
-    title: "Total Ads Watched",
+    title: "Total de Anúncios Vistos",
     value: "2,435",
     icon: "clapperboard",
-    change: "+122 this month",
+    change: "+122 este mês",
   },
   {
-    title: "Total Credits Earned",
+    title: "Total de Créditos Ganhos",
     value: "316,250",
     icon: "award",
-    change: "+12,500 this month",
+    change: "+12.500 este mês",
   },
   {
-    title: "Active Ad Campaigns",
+    title: "Campanhas de Anúncios Ativas",
     value: "3",
     icon: "trending-up",
-    change: "From our partners",
+    change: "Dos nossos parceiros",
   },
 ];
 
 export const adOpportunities = [
   {
     id: 'ad1',
-    title: "Watch & Earn: Sportify+",
-    description: "Watch a 30s ad for Sportify+ and earn 100 credits.",
+    title: "Assista e Ganhe: Sportify+",
+    description: "Assista a um anúncio de 30s da Sportify+ e ganhe 100 créditos.",
     reward: 100,
     duration: 30,
     image: 'https://picsum.photos/seed/ad1/300/150'
   },
   {
     id: 'ad2',
-    title: "Claim your Bonus: BetEasy",
-    description: "Engage with BetEasy for 15s and get 50 credits.",
+    title: "Reivindique seu Bônus: BetEasy",
+    description: "Interaja com a BetEasy por 15s e ganhe 50 créditos.",
     reward: 50,
     duration: 15,
     image: 'https://picsum.photos/seed/ad2/300/150'
   },
   {
     id: 'ad3',
-    title: "New Gear from KickOff",
-    description: "View the new collection from KickOff to earn 75 credits.",
+    title: "Novo Equipamento da KickOff",
+    description: "Veja a nova coleção da KickOff para ganhar 75 créditos.",
     reward: 75,
     duration: 20,
     image: 'https://picsum.photos/seed/ad3/300/150'
@@ -49,26 +49,26 @@ export const adOpportunities = [
 export const transactionHistory = [
   {
     id: 'txn1',
-    description: 'Reward: Sportify+ Ad',
+    description: 'Recompensa: Anúncio Sportify+',
     amount: '+100',
-    date: '2024-05-20',
+    date: '20/05/2024',
   },
   {
     id: 'txn2',
-    description: 'Withdrawal',
+    description: 'Saque',
     amount: '-500',
-    date: '2024-05-19',
+    date: '19/05/2024',
   },
   {
     id: 'txn3',
-    description: 'Reward: BetEasy Ad',
+    description: 'Recompensa: Anúncio BetEasy',
     amount: '+50',
-    date: '2024-05-18',
+    date: '18/05/2024',
   },
   {
     id: 'txn4',
-    description: 'Reward: KickOff Ad',
+    description: 'Recompensa: Anúncio KickOff',
     amount: '+75',
-    date: '2024-05-17',
+    date: '17/05/2024',
   }
 ];

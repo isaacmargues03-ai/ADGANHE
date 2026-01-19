@@ -56,14 +56,14 @@ export default function ProfilePage() {
     try {
       localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
       toast({
-        title: "Profile Saved",
-        description: "Your ad recommendations will now be updated.",
+        title: "Perfil Salvo",
+        description: "Suas recomendações de anúncios serão atualizadas.",
       });
     } catch (error) {
         toast({
             variant: "destructive",
-            title: "Error Saving Profile",
-            description: "Could not save your preferences.",
+            title: "Erro ao Salvar Perfil",
+            description: "Não foi possível salvar suas preferências.",
         });
     }
   }
@@ -71,15 +71,15 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Your Profile</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Seu Perfil</h1>
         <p className="text-muted-foreground">
-          Help us personalize your ad experience.
+          Ajude-nos a personalizar sua experiência com anúncios.
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Football Preferences</CardTitle>
+          <CardTitle>Preferências de Futebol</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -89,12 +89,12 @@ export default function ProfilePage() {
                 name="favoriteTeam"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Favorite Football Team</FormLabel>
+                    <FormLabel>Time de Futebol Favorito</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Manchester United" {...field} />
+                      <Input placeholder="ex: Manchester United" {...field} />
                     </FormControl>
                     <FormDescription>
-                      This helps us find ads related to your team.
+                      Isso nos ajuda a encontrar anúncios relacionados ao seu time.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -105,12 +105,12 @@ export default function ProfilePage() {
                 name="playerToWatch"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>A Player You Follow</FormLabel>
+                    <FormLabel>Um Jogador que Você Acompanha</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Cristiano Ronaldo" {...field} />
+                      <Input placeholder="ex: Cristiano Ronaldo" {...field} />
                     </FormControl>
                     <FormDescription>
-                      Get recommendations about player-sponsored content.
+                      Receba recomendações sobre conteúdo patrocinado por jogadores.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -121,21 +121,21 @@ export default function ProfilePage() {
                 name="interests"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Other Interests</FormLabel>
+                    <FormLabel>Outros Interesses</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="e.g., Fantasy football, sports betting, football jerseys..."
+                        placeholder="ex: Futebol Fantasia, apostas esportivas, camisas de futebol..."
                         {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      Tell us more about what you like.
+                      Conte-nos mais sobre o que você gosta.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit">Save Preferences</Button>
+              <Button type="submit">Salvar Preferências</Button>
             </form>
           </Form>
         </CardContent>

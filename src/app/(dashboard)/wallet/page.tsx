@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { transactionHistory } from "@/lib/data";
 import { ArrowDown, ArrowUp, Banknote, Loader2 } from "lucide-react";
@@ -28,9 +27,9 @@ export default function WalletPage() {
     setTimeout(() => {
       setIsWithdrawing(false);
       toast({
-        title: "Withdrawal Initiated",
+        title: "Saque Iniciado",
         description:
-          "Your request has been received and is being processed.",
+          "Sua solicitação foi recebida e está sendo processada.",
       });
     }, 2000);
   };
@@ -38,25 +37,25 @@ export default function WalletPage() {
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2 space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Wallet</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Minha Carteira</h1>
           <p className="text-muted-foreground">
-            Manage your credits and payouts.
+            Gerencie seus créditos e saques.
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
             <CreditBalance />
             <Card as="form" onSubmit={handleWithdraw}>
                 <CardHeader>
-                    <CardTitle>Withdraw Credits</CardTitle>
-                    <CardDescription>Enter amount to withdraw.</CardDescription>
+                    <CardTitle>Sacar Créditos</CardTitle>
+                    <CardDescription>Digite o valor para sacar.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Input type="number" placeholder="e.g., 500" required />
+                    <Input type="number" placeholder="ex: 500" required />
                 </CardContent>
                 <CardFooter>
                     <Button className="w-full" disabled={isWithdrawing}>
                         {isWithdrawing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Banknote className="mr-2 h-4 w-4" />}
-                        Request Payout
+                        Solicitar Saque
                     </Button>
                 </CardFooter>
             </Card>
@@ -65,7 +64,7 @@ export default function WalletPage() {
 
       <Card className="lg:col-span-1">
         <CardHeader>
-          <CardTitle>Transaction History</CardTitle>
+          <CardTitle>Histórico de Transações</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4">
           {transactionHistory.map((txn) => (

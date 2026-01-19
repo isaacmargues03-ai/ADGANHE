@@ -14,15 +14,15 @@ import {z} from 'genkit';
 const PersonalizedAdRecommendationsInputSchema = z.object({
   userProfile: z
     .string()
-    .describe("The user's profile, including their interests and preferences related to football."),
+    .describe("O perfil do usuário, incluindo seus interesses e preferências relacionados ao futebol."),
   scoutAIStatistics: z
     .string()
-    .describe('Football statistics provided by scoutAI.'),
+    .describe('Estatísticas de futebol fornecidas pela scoutAI.'),
 });
 export type PersonalizedAdRecommendationsInput = z.infer<typeof PersonalizedAdRecommendationsInputSchema>;
 
 const PersonalizedAdRecommendationsOutputSchema = z.object({
-  adRecommendations: z.array(z.string()).describe('A list of personalized ad recommendations.'),
+  adRecommendations: z.array(z.string()).describe('Uma lista de recomendações de anúncios personalizados.'),
 });
 export type PersonalizedAdRecommendationsOutput = z.infer<typeof PersonalizedAdRecommendationsOutputSchema>;
 
@@ -34,12 +34,12 @@ const prompt = ai.definePrompt({
   name: 'personalizedAdRecommendationsPrompt',
   input: {schema: PersonalizedAdRecommendationsInputSchema},
   output: {schema: PersonalizedAdRecommendationsOutputSchema},
-  prompt: `You are an expert in personalized advertising. Based on the user's profile and football statistics provided by scoutAI, you will provide a list of personalized ad recommendations.
+  prompt: `Você é um especialista em publicidade personalizada. Com base no perfil do usuário e nas estatísticas de futebol fornecidas pela scoutAI, você fornecerá uma lista de recomendações de anúncios personalizados.
 
-User Profile: {{{userProfile}}}
-ScoutAI Statistics: {{{scoutAIStatistics}}}
+Perfil do Usuário: {{{userProfile}}}
+Estatísticas da ScoutAI: {{{scoutAIStatistics}}}
 
-Provide a list of ad recommendations that are relevant to the user's interests based on the provided information.
+Forneça uma lista de recomendações de anúncios que sejam relevantes para os interesses do usuário com base nas informações fornecidas.
 
 {{#each adRecommendations}}
   - {{{this}}}

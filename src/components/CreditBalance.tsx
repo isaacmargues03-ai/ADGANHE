@@ -10,7 +10,7 @@ export function CreditBalance() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">My Credits</CardTitle>
+        <CardTitle className="text-sm font-medium">Meus Créditos</CardTitle>
         <Award className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
@@ -22,7 +22,7 @@ export function CreditBalance() {
           </div>
         )}
         <p className="text-xs text-muted-foreground">
-          Earn more by watching ads
+          Ganhe mais assistindo a anúncios
         </p>
       </CardContent>
     </Card>
