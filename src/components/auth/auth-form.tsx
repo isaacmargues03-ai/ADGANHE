@@ -21,6 +21,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword
 } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   email: z.string().email("Por favor, insira um email válido."),
@@ -37,6 +38,7 @@ export function AuthForm({ type }: AuthFormProps) {
   const { toast } = useToast();
   const auth = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(formSchema),
@@ -48,11 +50,11 @@ export function AuthForm({ type }: AuthFormProps) {
 
   function onSubmit(data: AuthFormValues) {
     setIsLoading(true);
-    toast({
-        title: type === 'login' ? "Entrando..." : "Criando sua conta...",
-        description: "Por favor, aguarde um momento.",
-    });
     
+    const handleAuthSuccess = () => {
+      router.replace('/dashboard');
+    };
+
     const handleAuthError = (error: any) => {
         setIsLoading(false);
         let description = "Ocorreu um erro. Tente novamente.";
@@ -87,9 +89,11 @@ export function AuthForm({ type }: AuthFormProps) {
 
     if (type === "login") {
         signInWithEmailAndPassword(auth, data.email, data.password)
+            .then(handleAuthSuccess)
             .catch(handleAuthError);
     } else {
         createUserWithEmailAndPassword(auth, data.email, data.password)
+            .then(handleAuthSuccess)
             .catch(handleAuthError);
     }
   }
