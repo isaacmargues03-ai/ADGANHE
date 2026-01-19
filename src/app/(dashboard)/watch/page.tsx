@@ -29,7 +29,7 @@ export default function WatchPage() {
       updateCredits(selectedAd.reward);
       toast({
         title: "Recompensa Resgatada!",
-        description: `Você ganhou ${selectedAd.reward} créditos.`,
+        description: `Você ganhou ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAd.reward)}.`,
       });
       setSelectedAd(null);
     }
@@ -39,9 +39,9 @@ export default function WatchPage() {
     <>
       <div className="flex flex-col gap-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Assista e Ganhe</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Ver Anúncios</h1>
           <p className="text-muted-foreground">
-            Complete as visualizações de anúncios para ganhar créditos.
+            Complete as visualizações de anúncios para ganhar recompensas.
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

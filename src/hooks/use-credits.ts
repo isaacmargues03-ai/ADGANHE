@@ -2,22 +2,22 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-const CREDITS_KEY = "adengage-user-credits";
+const BALANCE_KEY = "adengage-user-balance";
 
 export function useCredits() {
   const [credits, setCredits] = useState<number | null>(null);
 
   useEffect(() => {
     try {
-      const storedCredits = localStorage.getItem(CREDITS_KEY);
-      if (storedCredits) {
-        setCredits(parseInt(storedCredits, 10));
+      const storedBalance = localStorage.getItem(BALANCE_KEY);
+      if (storedBalance) {
+        setCredits(parseFloat(storedBalance));
       } else {
-        setCredits(500); // Initial credits for new users
+        setCredits(50.0); // Initial balance for new users
       }
     } catch (error) {
       console.error("Could not access localStorage:", error);
-      setCredits(500);
+      setCredits(50.0);
     }
   }, []);
 
@@ -25,7 +25,7 @@ export function useCredits() {
     setCredits((prevCredits) => {
       const newCredits = (prevCredits ?? 0) + amount;
       try {
-        localStorage.setItem(CREDITS_KEY, newCredits.toString());
+        localStorage.setItem(BALANCE_KEY, newCredits.toFixed(2));
       } catch (error) {
         console.error("Could not access localStorage:", error);
       }

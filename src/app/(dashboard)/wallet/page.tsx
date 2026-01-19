@@ -39,18 +39,18 @@ export default function WalletPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Minha Carteira</h1>
           <p className="text-muted-foreground">
-            Gerencie seus créditos e saques.
+            Gerencie seu saldo e saques.
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
             <CreditBalance />
             <Card as="form" onSubmit={handleWithdraw}>
                 <CardHeader>
-                    <CardTitle>Sacar Créditos</CardTitle>
+                    <CardTitle>Sacar Saldo</CardTitle>
                     <CardDescription>Digite o valor para sacar.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Input type="number" placeholder="ex: 500" required />
+                    <Input type="number" placeholder="ex: 50.00" step="0.01" required />
                 </CardContent>
                 <CardFooter>
                     <Button className="w-full" disabled={isWithdrawing}>

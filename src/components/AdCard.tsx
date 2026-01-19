@@ -24,7 +24,7 @@ export function AdCard({ title, description, reward, onWatch }: AdCardProps) {
             <CardTitle>{title}</CardTitle>
             <div className="flex items-center gap-1 text-sm font-semibold text-accent">
                 <Award className="h-4 w-4" />
-                <span>{reward}</span>
+                <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(reward)}</span>
             </div>
         </div>
         <CardDescription>{description}</CardDescription>
@@ -33,7 +33,7 @@ export function AdCard({ title, description, reward, onWatch }: AdCardProps) {
       <CardFooter>
         <Button onClick={onWatch} className="w-full">
           <Clapperboard className="mr-2 h-4 w-4" />
-          Assista Agora
+          Ver Anúncio
         </Button>
       </CardFooter>
     </Card>

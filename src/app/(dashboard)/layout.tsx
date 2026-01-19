@@ -27,7 +27,7 @@ import { AppLogo } from "@/components/icons";
 
 const menuItems = [
   { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
-  { href: "/dashboard/watch", label: "Assistir Anúncios", icon: Clapperboard },
+  { href: "/dashboard/watch", label: "Ver Anúncios", icon: Clapperboard },
   { href: "/dashboard/wallet", label: "Carteira", icon: Wallet },
   { href: "/dashboard/profile", label: "Perfil", icon: User },
 ];
