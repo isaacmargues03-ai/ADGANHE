@@ -46,29 +46,4 @@ export const transactionHistory = [
   }
 ];
 
-export const rewardedAds = [
-  {
-    id: "ad1",
-    title: "Campanha Abstrata",
-    reward: 1.25,
-    duration: 30,
-    imageUrl: "https://images.unsplash.com/photo-1711779323778-fe89eef8f580?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhZHZlcnRpc2VtZW50JTIwYWJzdHJhY3R8ZW58MHx8fHwxNzY4ODM5OTUzfDA&ixlib=rb-4.1.0&q=80&w=1080",
-    imageHint: "advertisement abstract"
-  },
-  {
-    id: "ad2",
-    title: "Campanha Colorida",
-    reward: 0.75,
-    duration: 15,
-    imageUrl: "https://images.unsplash.com/photo-1642480532034-362360552ccb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxhZHZlcnRpc2VtZW50JTIwY29sb3JmdWx8ZW58MHx8fHwxNzY4ODM5OTUzfDA&ixlib=rb-4.1.0&q=80&w=1080",
-    imageHint: "advertisement colorful"
-  },
-  {
-    id: "ad3",
-    title: "Campanha de Tecnologia",
-    reward: 1.00,
-    duration: 25,
-    imageUrl: "https://images.unsplash.com/photo-1549947998-e68fc0831707?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhZHZlcnRpc2VtZW50JTIwdGVjaG5vbG9neXxlbnwwfHx8fDE3Njg4Mzk5NTN8MA&ixlib=rb-4.1.0&q=80&w=1080",
-    imageHint: "advertisement technology"
-  },
-]
+export const rewardedAds = []
