@@ -1,0 +1,68 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the AdEngage Platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "username": {
+          "type": "string",
+          "description": "The username of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "registrationDate": {
+          "type": "string",
+          "description": "The date and time the user registered.",
+          "format": "date-time"
+        },
+        "lastLogin": {
+          "type": "string",
+          "description": "The date and time of the user's last login.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email",
+        "registrationDate"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information. The 'userId' parameter corresponds to the Firebase Authentication UID. Access is restricted to the authenticated user.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user, matching the Firebase Authentication UID."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support user authentication and management, a crucial foundation for the AdEngage platform. The structure focuses on secure and scalable data storage, optimized for the platform's key features, including dynamic indexing, ad network integration, and personalized ad recommendations. By structuring the data around users, the system can efficiently manage user profiles, authentication data, and any user-specific data added in the future.\n\n**Authorization Independence:** The current data structure focuses on user-specific data, which naturally provides authorization independence. Since the user document only contains user-related information, access control is straightforward and based on the `request.auth.uid` matching the `userId` in the path.\n\n**QAPs (Rules are not Filters):** The segregation of user data into individual documents under the `/users/{userId}` path ensures that list operations can be securely managed. Rules can efficiently restrict access to only the authenticated user's data without needing to filter based on document content."
+  }
+}
