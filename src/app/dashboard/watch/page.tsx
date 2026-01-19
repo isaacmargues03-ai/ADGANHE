@@ -8,7 +8,7 @@ export default function WatchPage() {
   const adUrl = "https://www.effectivegatecpm.com/u2kb7rcvi?key=1b2369148d1530ae3b0f8aa4f424c29a";
 
   const handleWatchAd = () => {
-    window.open(adUrl, "_blank");
+    window.open(adUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
