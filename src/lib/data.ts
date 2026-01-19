@@ -1,7 +1,3 @@
-import { PlaceHolderImages } from "./placeholder-images";
-
-const betEasyAdImage = PlaceHolderImages.find(p => p.id === 'ad-banner-beteasy');
-const sportifyAdImage = PlaceHolderImages.find(p => p.id === 'ad-banner-sportify');
 
 export const dashboardStats = [
   {
@@ -51,19 +47,4 @@ export const transactionHistory = [
   }
 ];
 
-export const rewardedAds = [
-  {
-    title: "Bônus BetEasy: Interaja e Ganhe",
-    reward: 0.50,
-    duration: 20,
-    imageUrl: betEasyAdImage?.imageUrl ?? "https://picsum.photos/seed/beteasy/600/400",
-    imageHint: "sports betting"
-  },
-  {
-    title: "Sportify+: Ouça sem limites",
-    reward: 0.75,
-    duration: 30,
-    imageUrl: sportifyAdImage?.imageUrl ?? "https://picsum.photos/seed/sportify/600/400",
-    imageHint: "music streaming"
-  }
-];
+export const rewardedAds: any[] = [];
