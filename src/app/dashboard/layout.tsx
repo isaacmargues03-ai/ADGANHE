@@ -21,6 +21,7 @@ import {
   LogOut,
   Wallet,
   Loader2,
+  Shield,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppLogo } from "@/components/icons";
@@ -30,6 +31,7 @@ const menuItems = [
   { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
   { href: "/dashboard/watch", label: "Assistir Anúncios", icon: Clapperboard },
   { href: "/dashboard/wallet", label: "Carteira", icon: Wallet },
+  { href: "/dashboard/admin", label: "Admin", icon: Shield },
 ];
 
 export default function DashboardLayout({
