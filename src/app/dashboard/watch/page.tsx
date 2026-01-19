@@ -44,7 +44,18 @@ export default function WatchPage() {
   }, [isWatching, countdown, updateCredits, toast, rewardAmount, addTransaction]);
 
   const handleStartReward = () => {
-    window.open(adUrl, '_blank', 'noopener,noreferrer');
+    const adWindow = window.open(adUrl, '_blank', 'noopener,noreferrer');
+
+    // A simple check to see if the window was blocked by a pop-up/ad blocker.
+    if (!adWindow || adWindow.closed || typeof adWindow.closed === 'undefined') {
+      toast({
+        variant: "destructive",
+        title: "Bloqueador de Anúncios Detectado",
+        description: "Por favor, desative seu bloqueador de anúncios para ganhar recompensas.",
+      });
+      return; // Do not start the timer if the ad is blocked
+    }
+    
     setIsWatching(true);
   };
 
