@@ -1,7 +1,14 @@
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 
+const plugins = [];
+
+// Conditionally initialize Google AI if an API key is available
+if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) {
+  plugins.push(googleAI());
+}
+
 export const ai = genkit({
-  plugins: [googleAI()],
+  plugins,
   model: 'googleai/gemini-2.5-flash',
 });

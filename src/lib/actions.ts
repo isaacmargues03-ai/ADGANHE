@@ -6,6 +6,10 @@ import type { PersonalizedAdRecommendationsInput } from "@/ai/flows/personalized
 export async function generateAds(
   input: PersonalizedAdRecommendationsInput
 ): Promise<{ adRecommendations: string[] } | { error: string }> {
+  if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_API_KEY) {
+    return { error: "AI features are not configured. Please set a Google AI API key in your environment variables to enable personalized recommendations." };
+  }
+  
   try {
     // In a real application, you might fetch more detailed scoutAI stats here.
     const fullInput = {
@@ -20,6 +24,7 @@ export async function generateAds(
     return result;
   } catch (e) {
     console.error(e);
-    return { error: "An unexpected error occurred." };
+    const message = e instanceof Error ? e.message : "An unexpected error occurred.";
+    return { error: message };
   }
 }
