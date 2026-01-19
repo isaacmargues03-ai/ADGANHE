@@ -37,7 +37,7 @@ export function AdCard({ title, reward, duration, imageUrl, imageHint }: AdCardP
         title: "Recompensa Recebida!",
         description: `Você ganhou R$ ${reward.toFixed(2)} por assistir ao anúncio.`,
       });
-    }, duration * 100); // Simulação de visualização, tempo reduzido para demonstração
+    }, duration * 1000); // Simulação de visualização, em segundos
   };
   
   const formattedReward = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(reward);
