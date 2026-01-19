@@ -19,7 +19,6 @@ import {
   Clapperboard,
   LayoutDashboard,
   LogOut,
-  Settings,
   Wallet,
   Loader2,
 } from "lucide-react";
@@ -89,12 +88,6 @@ export default function DashboardLayout({
         </SidebarContent>
         <SidebarFooter>
           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Configurações">
-                <Settings />
-                <span>Configurações</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Perfil do Usuário">
                 <Avatar className="size-7">

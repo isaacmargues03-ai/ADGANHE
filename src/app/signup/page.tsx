@@ -8,7 +8,7 @@ export default function SignUpPage() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center text-center mb-6">
           <AppLogo className="size-10 mb-2 text-primary" />
-          <h1 className="text-2xl font-bold">Crie sua Conta</h1>
+          <h1 className="text-2xl font-bold">Crie sua Conta na AdEngage</h1>
           <p className="text-muted-foreground">
             Comece a ganhar recompensas hoje mesmo.
           </p>

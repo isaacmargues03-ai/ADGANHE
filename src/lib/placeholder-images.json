@@ -13,10 +13,10 @@
       "imageHint": "advertisement colorful"
     },
     {
-      "id": "ad-banner-3",
-      "description": "Tech ad banner",
-      "imageUrl": "https://images.unsplash.com/photo-1549947998-e68fc0831707?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhZHZlcnRpc2VtZW50JTIwdGVjaG5vbG9neXxlbnwwfHx8fDE3Njg4Mzk5NTN8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "advertisement technology"
+      "id": "ad-banner-beteasy",
+      "description": "BetEasy ad banner",
+      "imageUrl": "https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzcG9ydHMlMjBiZXR0aW5nfGVufDB8fHx8MTc2ODkwMDgwNnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sports betting"
     },
     {
       "id": "user-avatar-1",

@@ -13,11 +13,11 @@ export function useCredits() {
       if (storedBalance) {
         setCredits(parseFloat(storedBalance));
       } else {
-        setCredits(50.0); // Initial balance for new users
+        setCredits(0.0); // Initial balance for new users
       }
     } catch (error) {
       console.error("Could not access localStorage:", error);
-      setCredits(50.0);
+      setCredits(0.0);
     }
   }, []);
 
