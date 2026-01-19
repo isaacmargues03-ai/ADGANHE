@@ -1,4 +1,3 @@
-
 "use client";
 
 import { CreditBalance } from "@/components/CreditBalance";
@@ -38,8 +37,11 @@ export default function WalletPage() {
   const { credits, updateCredits, loading: creditsLoading } = useCredits();
 
   useEffect(() => {
-    if (localStorage.getItem(WITHDRAWALS_KEY) === null) {
-      localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(initialRequests));
+    if (typeof window !== 'undefined') {
+        const storedRequests = localStorage.getItem(WITHDRAWALS_KEY);
+        if (storedRequests === null) {
+            localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(initialRequests));
+        }
     }
   }, []);
 
@@ -79,30 +81,28 @@ export default function WalletPage() {
       status: 'pending',
     };
 
-    setTimeout(() => {
-      try {
-        const storedRequests = localStorage.getItem(WITHDRAWALS_KEY);
-        const requests = storedRequests ? JSON.parse(storedRequests) : [];
-        const updatedRequests = [newRequest, ...requests];
-        localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(updatedRequests));
+    try {
+      const storedRequests = localStorage.getItem(WITHDRAWALS_KEY);
+      const requests = storedRequests ? JSON.parse(storedRequests) : [];
+      const updatedRequests = [newRequest, ...requests];
+      localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(updatedRequests));
 
-        updateCredits(-withdrawAmount);
-        setAmount("");
+      updateCredits(-withdrawAmount);
+      setAmount("");
+      toast({
+        title: "Saque Solicitado",
+        description: "Sua solicitação foi recebida e está sendo processada.",
+      });
+    } catch (error) {
+      console.error("Failed to process withdrawal:", error);
+      toast({
+          variant: "destructive",
+          title: "Erro ao Processar",
+          description: "Não foi possível processar sua solicitação. Tente novamente.",
+      });
+    } finally {
         setIsWithdrawing(false);
-        toast({
-          title: "Saque Solicitado",
-          description: "Sua solicitação foi recebida e está sendo processada.",
-        });
-      } catch (error) {
-        console.error("Failed to process withdrawal:", error);
-        setIsWithdrawing(false);
-        toast({
-            variant: "destructive",
-            title: "Erro ao Processar",
-            description: "Não foi possível processar sua solicitação. Tente novamente.",
-        });
-      }
-    }, 1500);
+    }
   };
   return (
     <div className="grid gap-6 lg:grid-cols-3">
@@ -115,7 +115,8 @@ export default function WalletPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
             <CreditBalance />
-            <Card as="form" onSubmit={handleWithdraw}>
+            <Card>
+              <form onSubmit={handleWithdraw}>
                 <CardHeader>
                     <CardTitle>Sacar Créditos</CardTitle>
                     <CardDescription>O valor mínimo para saque é de R$ 2,00.</CardDescription>
@@ -133,11 +134,12 @@ export default function WalletPage() {
                     />
                 </CardContent>
                 <CardFooter>
-                    <Button className="w-full" disabled={isWithdrawing || creditsLoading || !amount}>
+                    <Button type="submit" className="w-full" disabled={isWithdrawing || creditsLoading || !amount}>
                         {isWithdrawing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Banknote className="mr-2 h-4 w-4" />}
                         Solicitar Saque
                     </Button>
                 </CardFooter>
+              </form>
             </Card>
         </div>
       </div>
