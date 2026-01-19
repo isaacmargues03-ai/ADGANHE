@@ -10,7 +10,7 @@ import { useTransactions } from "@/hooks/use-transactions";
 export default function WatchPage() {
   const adWatchTime = 20; // 20 seconds
   const rewardAmount = 0.02; // R$ 0,02
-  const adUrl = "https://www.google.com"; // Changed for demonstration purposes
+  const adUrl = "https://www.effectivegatecpm.com/u2kb7rcvi?key=1b2369148d1530ae3b0f8aa4f424c29a";
 
   const { updateCredits } = useCredits();
   const { addTransaction } = useTransactions();
