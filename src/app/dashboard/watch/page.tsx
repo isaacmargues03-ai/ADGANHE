@@ -52,22 +52,24 @@ export default function WatchPage() {
             <p className="text-muted-foreground">Anúncios vistos: {cliques} / {totalNecessario}</p>
         </div>
         
-        <Button 
-          onClick={handleAnuncio}
-          size="lg"
-          disabled={cliques >= totalNecessario}
-        >
-          {cliques === 0 ? "Começar Tarefa" : "Ver Próximo Anúncio"}
-        </Button>
-
-        {cliques >= totalNecessario && (
-          <Button 
-            onClick={resgatarRecompensa}
-            size="lg"
-            className="bg-accent text-accent-foreground hover:bg-accent/90 animate-bounce"
-          >
-            RESGATAR R$ {rewardAmount.toFixed(2)}
-          </Button>
+        {cliques < totalNecessario ? (
+            <div className="flex flex-col items-center gap-2">
+                <Button 
+                  onClick={handleAnuncio}
+                  size="lg"
+                >
+                  {cliques === 0 ? "Começar Tarefa" : "Ver Próximo Anúncio"}
+                </Button>
+                <p className="text-xs text-muted-foreground">Acesse a página, aguarde o site abrir e volte.</p>
+            </div>
+        ) : (
+            <Button 
+                onClick={resgatarRecompensa}
+                size="lg"
+                className="bg-accent text-accent-foreground hover:bg-accent/90 animate-bounce"
+            >
+                RESGATAR R$ {rewardAmount.toFixed(2)}
+            </Button>
         )}
       </div>
     </div>
