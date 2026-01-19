@@ -7,7 +7,6 @@ import { useCredits } from "@/hooks/use-credits";
 import { useToast } from "@/hooks/use-toast";
 
 export default function WatchPage() {
-  const adUrl = "https://www.effectivegatecpm.com/u2kb7rcvi?key=1b2369148d1530ae3b0f8aa4f424c29a";
   const adWatchTime = 20; // 20 seconds
   const rewardAmount = 0.50; // R$ 0,50
 
@@ -33,15 +32,14 @@ export default function WatchPage() {
       updateCredits(rewardAmount);
       toast({
         title: "Recompensa Recebida!",
-        description: `Você ganhou R$ ${rewardAmount.toFixed(2)} por assistir ao anúncio.`,
+        description: `Você ganhou R$ ${rewardAmount.toFixed(2)}.`,
       });
       // Reset for next watch
       setTimeout(() => setCountdown(adWatchTime), 1000);
     }
   }, [isWatching, countdown, updateCredits, toast, rewardAmount]);
 
-  const handleWatchAd = () => {
-    window.open(adUrl, "_blank", "noopener,noreferrer");
+  const handleStartReward = () => {
     setIsWatching(true);
   };
 
@@ -50,12 +48,12 @@ export default function WatchPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Assista e Ganhe</h1>
         <p className="text-muted-foreground">
-          Clique no botão abaixo para ver um anúncio e ganhar recompensas.
+          Clique no botão para iniciar o temporizador e ganhar sua recompensa. Os anúncios aparecerão automaticamente durante sua navegação.
         </p>
       </div>
 
       <div className="flex items-center justify-center rounded-lg border border-dashed p-12 text-center">
-        <Button size="lg" onClick={handleWatchAd} disabled={isWatching}>
+        <Button size="lg" onClick={handleStartReward} disabled={isWatching}>
           {isWatching ? (
             <>
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -64,7 +62,7 @@ export default function WatchPage() {
           ) : (
             <>
               <Clapperboard className="mr-2 h-5 w-5" />
-              <span>Ver Anúncio</span>
+              <span>Iniciar Recompensa</span>
             </>
           )}
         </Button>
