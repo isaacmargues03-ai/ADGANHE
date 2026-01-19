@@ -48,6 +48,10 @@ export function AuthForm({ type }: AuthFormProps) {
 
   function onSubmit(data: AuthFormValues) {
     setIsLoading(true);
+    toast({
+        title: type === 'login' ? "Entrando..." : "Criando sua conta...",
+        description: "Por favor, aguarde um momento.",
+    });
     
     const handleAuthError = (error: any) => {
         setIsLoading(false);
