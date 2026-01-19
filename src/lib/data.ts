@@ -6,18 +6,6 @@ export const dashboardStats = [
     icon: "clapperboard",
     change: "+5 desde ontem",
   },
-  {
-    title: "Ganhos Totais",
-    value: "R$ 142,25",
-    icon: "award",
-    change: "+R$ 6,00 hoje",
-  },
-  {
-    title: "Campanhas Ativas",
-    value: "2",
-    icon: "trending-up",
-    change: "BetEasy, Sportify+",
-  },
 ];
 
 export const transactionHistory = [
