@@ -18,6 +18,7 @@ export default function WatchPage() {
 
   const [countdown, setCountdown] = useState<number>(adWatchTime);
   const [isWatching, setIsWatching] = useState(false);
+  const [showAd, setShowAd] = useState(false);
 
   useEffect(() => {
     if (!isWatching || countdown <= 0) return;
@@ -32,6 +33,7 @@ export default function WatchPage() {
   useEffect(() => {
     if (isWatching && countdown === 0) {
       setIsWatching(false);
+      setShowAd(false);
       updateCredits(rewardAmount);
       addTransaction({ description: "Recompensa de anúncio", amount: rewardAmount });
       toast({
@@ -44,20 +46,8 @@ export default function WatchPage() {
   }, [isWatching, countdown, updateCredits, toast, rewardAmount, addTransaction]);
 
   const handleStartReward = () => {
-    const adWindow = window.open(adUrl, "_blank");
-
-    // Check if the window was blocked or the link is invalid
-    if (!adWindow || adWindow.closed || typeof adWindow.closed === "undefined") {
-      toast({
-        variant: "destructive",
-        title: "Aviso",
-        description: "O anúncio não pôde ser aberto. Verifique seu bloqueador de anúncios ou se o link do provedor é válido.",
-      });
-      return;
-    }
-    
-    // If the ad window opened successfully, start the timer.
     setIsWatching(true);
+    setShowAd(true);
   };
 
   return (
@@ -69,7 +59,7 @@ export default function WatchPage() {
         </p>
       </div>
 
-      <div className="flex items-center justify-center rounded-lg border border-dashed p-12 text-center">
+      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center gap-8">
         <Button size="lg" onClick={handleStartReward} disabled={isWatching}>
           {isWatching ? (
             <>
@@ -83,6 +73,28 @@ export default function WatchPage() {
             </>
           )}
         </Button>
+        
+        {showAd && (
+          <div className="w-full h-96 rounded-lg overflow-hidden border bg-muted">
+            <iframe
+              src={adUrl}
+              title="Anúncio"
+              width="100%"
+              height="100%"
+              style={{ border: 'none' }}
+              onError={() => {
+                toast({
+                  variant: "destructive",
+                  title: "Erro ao carregar anúncio",
+                  description: "O provedor de anúncios pode não permitir a exibição em um frame.",
+                });
+                setShowAd(false);
+                setIsWatching(false);
+                setCountdown(adWatchTime);
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
