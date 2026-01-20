@@ -22,6 +22,7 @@ import {
   Wallet,
   Loader2,
   Shield,
+  MessageSquare,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppLogo } from "@/components/icons";
@@ -109,6 +110,14 @@ export default function DashboardLayout({
                     {user.email}
                   </span>
                 </div>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="Falar com Suporte">
+                  <a href="https://t.me/John_investa" target="_blank" rel="noopener noreferrer">
+                      <MessageSquare />
+                      <span>Falar com Suporte</span>
+                  </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
