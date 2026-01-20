@@ -54,7 +54,7 @@ export default function WatchPage() {
         </p>
       </div>
 
-      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center gap-8">
+      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center gap-8 md:p-12">
         <div className="flex flex-col gap-2">
             <h3 className="text-xl font-bold">Missão: Ganhe R$ {rewardAmount.toFixed(2)}</h3>
             <p className="text-muted-foreground">Anúncios vistos: {cliques} / {totalNecessario}</p>

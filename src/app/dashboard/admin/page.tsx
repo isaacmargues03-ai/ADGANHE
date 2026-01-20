@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -134,60 +135,110 @@ export default function AdminPage() {
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Usuário</TableHead>
-                  <TableHead>Chave PIX</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              {/* Mobile View */}
+              <div className="md:hidden">
                 {pendingRequests.length > 0 ? (
-                  pendingRequests.map((req) => (
-                    <TableRow key={req.id}>
-                      <TableCell>
-                        <div className="font-medium">{req.userName}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {req.userEmail}
-                        </div>
-                      </TableCell>
-                      <TableCell>{req.pixKey}</TableCell>
-                      <TableCell>{req.amount}</TableCell>
-                      <TableCell>{req.date}</TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-accent"
-                          onClick={() => handleRequest(req.id, "approve")}
-                        >
-                          <CheckCircle className="mr-2 h-4 w-4" />
-                          Aprovar
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive"
-                          onClick={() => handleRequest(req.id, "reject")}
-                        >
-                          <XCircle className="mr-2 h-4 w-4" />
-                          Rejeitar
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  <div className="space-y-4">
+                    {pendingRequests.map((req) => (
+                      <Card key={req.id} className="pt-6">
+                        <CardHeader className="py-0">
+                          <CardTitle className="text-base">{req.userName}</CardTitle>
+                          <CardDescription>{req.userEmail}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-1 text-sm">
+                          <p><strong>Valor:</strong> {req.amount}</p>
+                          <p><strong>Chave PIX:</strong> {req.pixKey}</p>
+                          <p><strong>Data:</strong> {req.date}</p>
+                        </CardContent>
+                        <CardFooter className="flex justify-end space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-accent"
+                            onClick={() => handleRequest(req.id, "approve")}
+                          >
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Aprovar
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive"
+                            onClick={() => handleRequest(req.id, "reject")}
+                          >
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Rejeitar
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    ))}
+                  </div>
                 ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center">
-                      Nenhuma solicitação pendente.
-                    </TableCell>
-                  </TableRow>
+                  <p className="py-8 text-center text-muted-foreground">
+                    Nenhuma solicitação pendente.
+                  </p>
                 )}
-              </TableBody>
-            </Table>
+              </div>
+
+              {/* Desktop View */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Usuário</TableHead>
+                      <TableHead>Chave PIX</TableHead>
+                      <TableHead>Valor</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pendingRequests.length > 0 ? (
+                      pendingRequests.map((req) => (
+                        <TableRow key={req.id}>
+                          <TableCell>
+                            <div className="font-medium">{req.userName}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {req.userEmail}
+                            </div>
+                          </TableCell>
+                          <TableCell>{req.pixKey}</TableCell>
+                          <TableCell>{req.amount}</TableCell>
+                          <TableCell>{req.date}</TableCell>
+                          <TableCell className="text-right space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-accent"
+                              onClick={() => handleRequest(req.id, "approve")}
+                            >
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Aprovar
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive"
+                              onClick={() => handleRequest(req.id, "reject")}
+                            >
+                              <XCircle className="mr-2 h-4 w-4" />
+                              Rejeitar
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-24 text-center">
+                          Nenhuma solicitação pendente.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -205,45 +256,82 @@ export default function AdminPage() {
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
           ) : (
-           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Usuário</TableHead>
-                <TableHead>Chave PIX</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead className="text-right">Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {processedRequests.length > 0 ? (
-                processedRequests.sort((a, b) => new Date(b.date.split('/').reverse().join('-')).getTime() - new Date(a.date.split('/').reverse().join('-')).getTime()).map((req) => (
-                  <TableRow key={req.id}>
-                    <TableCell>
-                      <div className="font-medium">{req.userName}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {req.userEmail}
-                      </div>
-                    </TableCell>
-                    <TableCell>{req.pixKey}</TableCell>
-                    <TableCell>{req.amount}</TableCell>
-                    <TableCell>{req.date}</TableCell>
-                    <TableCell className="text-right">
-                       <Badge variant={req.status === 'completed' ? 'outline' : 'destructive'} className={req.status === 'completed' ? 'text-accent border-accent' : ''}>
-                         {req.status === 'completed' ? 'Completo' : 'Rejeitado'}
-                       </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center">
+           <>
+              {/* Mobile View */}
+              <div className="md:hidden">
+                {processedRequests.length > 0 ? (
+                  <div className="space-y-4">
+                    {processedRequests.sort((a, b) => new Date(b.date.split('/').reverse().join('-')).getTime() - new Date(a.date.split('/').reverse().join('-')).getTime()).map((req) => (
+                      <Card key={req.id} className="pt-6">
+                        <CardHeader className="py-0">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <CardTitle className="text-base">{req.userName}</CardTitle>
+                              <CardDescription>{req.userEmail}</CardDescription>
+                            </div>
+                             <Badge variant={req.status === 'completed' ? 'outline' : 'destructive'} className={`${req.status === 'completed' ? 'border-accent text-accent' : ''} shrink-0`}>
+                               {req.status === 'completed' ? 'Completo' : 'Rejeitado'}
+                             </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-1 text-sm">
+                           <p><strong>Valor:</strong> {req.amount}</p>
+                           <p><strong>Chave PIX:</strong> {req.pixKey}</p>
+                           <p><strong>Data:</strong> {req.date}</p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                   <p className="py-8 text-center text-muted-foreground">
                     Nenhum saque processado ainda.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                   </p>
+                )}
+              </div>
+           
+              {/* Desktop View */}
+              <div className="hidden md:block">
+                <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Usuário</TableHead>
+                    <TableHead>Chave PIX</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead className="text-right">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {processedRequests.length > 0 ? (
+                    processedRequests.sort((a, b) => new Date(b.date.split('/').reverse().join('-')).getTime() - new Date(a.date.split('/').reverse().join('-')).getTime()).map((req) => (
+                      <TableRow key={req.id}>
+                        <TableCell>
+                          <div className="font-medium">{req.userName}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {req.userEmail}
+                          </div>
+                        </TableCell>
+                        <TableCell>{req.pixKey}</TableCell>
+                        <TableCell>{req.amount}</TableCell>
+                        <TableCell>{req.date}</TableCell>
+                        <TableCell className="text-right">
+                           <Badge variant={req.status === 'completed' ? 'outline' : 'destructive'} className={req.status === 'completed' ? 'text-accent border-accent' : ''}>
+                             {req.status === 'completed' ? 'Completo' : 'Rejeitado'}
+                           </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-24 text-center">
+                        Nenhum saque processado ainda.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
