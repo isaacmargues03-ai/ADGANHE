@@ -35,20 +35,34 @@ export default function WatchPage() {
   };
 
   const resgatarRecompensa = () => {
-    if (cliques < totalNecessario || isProcessing) return;
+    // 1. Se já estiver processando, o clique é ignorado totalmente
+    if (isProcessing) return;
 
+    // 2. Bloqueia o botão imediatamente
     setIsProcessing(true);
-    
+
     try {
-      updateCredits(rewardAmount);
-      addTransaction({ description: "Recompensa de Tarefa", amount: rewardAmount });
-      toast({
-        title: "Recompensa Resgatada!",
-        description: `Parabéns! R$ ${rewardAmount.toFixed(2)} adicionados à sua carteira.`,
-      });
-      setCliques(0); // Reinicia para a próxima
+      // 3. Verifica se ele realmente viu os 3 anúncios
+      if (cliques >= totalNecessario) {
+        updateCredits(rewardAmount);
+        addTransaction({ description: "Recompensa de Tarefa", amount: rewardAmount });
+        toast({
+          title: "Recompensa Resgatada!",
+          description: `Parabéns! R$ ${rewardAmount.toFixed(2)} adicionados à sua carteira.`,
+        });
+        // 4. Reseta os anúncios para 0 IMEDIATAMENTE
+        setCliques(0);
+      }
+    } catch (error) {
+        console.error("Erro ao resgatar recompensa:", error);
+        toast({
+            variant: "destructive",
+            title: "Erro",
+            description: "Não foi possível resgatar a recompensa.",
+        });
     } finally {
-        setIsProcessing(false);
+      // 5. Só libera o botão de novo depois de 2 segundos (anti-spam)
+      setTimeout(() => setIsProcessing(false), 2000);
     }
   };
 
@@ -73,6 +87,7 @@ export default function WatchPage() {
                 <Button 
                   onClick={handleAnuncio}
                   size="lg"
+                  disabled={isProcessing}
                 >
                   {cliques === 0 ? "Começar Tarefa" : "Ver Próximo Anúncio"}
                 </Button>
