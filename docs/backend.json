@@ -36,6 +36,63 @@
         "email",
         "registrationDate"
       ]
+    },
+    "WithdrawalRequest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Withdrawal Request",
+      "type": "object",
+      "description": "Represents a user's request to withdraw funds.",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user making the request."
+        },
+        "userName": {
+          "type": "string",
+          "description": "The name of the user."
+        },
+        "userEmail": {
+          "type": "string",
+          "description": "The email of the user.",
+          "format": "email"
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount to withdraw in BRL."
+        },
+        "pixKey": {
+          "type": "string",
+          "description": "The PIX key for the transfer."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "completed",
+            "rejected"
+          ],
+          "description": "The current status of the request."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the request was created."
+        },
+        "processedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the request was processed."
+        }
+      },
+      "required": [
+        "userId",
+        "userName",
+        "userEmail",
+        "amount",
+        "pixKey",
+        "status",
+        "createdAt"
+      ]
     }
   },
   "auth": {
@@ -58,6 +115,22 @@
             {
               "name": "userId",
               "description": "The unique identifier for the user, matching the Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/withdrawalRequests/{requestId}",
+        "definition": {
+          "entityName": "WithdrawalRequest",
+          "schema": {
+            "$ref": "#/backend/entities/WithdrawalRequest"
+          },
+          "description": "Stores all user withdrawal requests. Accessed by admins to process them.",
+          "params": [
+            {
+              "name": "requestId",
+              "description": "The unique identifier for the withdrawal request."
             }
           ]
         }

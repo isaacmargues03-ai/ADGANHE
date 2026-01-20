@@ -19,76 +19,66 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { withdrawalRequests as initialRequests } from "@/lib/data";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useUser } from "@/firebase";
+import { useState, useEffect, useMemo } from "react";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
+import { collection, query, orderBy, doc, updateDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 
 type WithdrawalRequest = {
   id: string;
+  userId: string;
   userName: string;
   userEmail: string;
-  amount: string;
+  amount: number;
   pixKey: string;
-  date: string;
+  createdAt: Timestamp;
   status: 'pending' | 'completed' | 'rejected';
 };
 
-const WITHDRAWALS_KEY = "adganhe-withdrawal-requests";
 const ADMIN_EMAIL = "isaacmargues03@gmail.com";
 
-
 export default function AdminPage() {
-  const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
   const { toast } = useToast();
-  const { user, isUserLoading } = useUser();
+  const { user, isUserLoading: isAuthLoading } = useUser();
   const router = useRouter();
+  const firestore = useFirestore();
 
-  // Effect for authorization and redirection
   useEffect(() => {
-    if (!isUserLoading && (!user || user.email !== ADMIN_EMAIL)) {
+    if (!isAuthLoading && (!user || user.email !== ADMIN_EMAIL)) {
       router.replace('/dashboard');
     }
-  }, [user, isUserLoading, router]);
-  
-  // Effect for loading data only for the admin
-  useEffect(() => {
-    if (user && user.email === ADMIN_EMAIL) {
-      try {
-        const storedRequests = localStorage.getItem(WITHDRAWALS_KEY);
-        if (storedRequests) {
-          setRequests(JSON.parse(storedRequests));
-        } else {
-          localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(initialRequests));
-          setRequests(initialRequests);
-        }
-      } catch (error) {
-        console.error("Could not access localStorage:", error);
-        setRequests(initialRequests);
-      } finally {
-        setDataLoading(false);
-      }
-    }
-  }, [user]);
+  }, [user, isAuthLoading, router]);
 
-  const handleRequest = (id: string, action: "approve" | "reject") => {
-    const request = requests.find((r) => r.id === id);
+  const requestsQuery = useMemoFirebase(() => {
+    if (!firestore || !user || user.email !== ADMIN_EMAIL) return null;
+    return query(collection(firestore, "withdrawalRequests"), orderBy("createdAt", "desc"));
+  }, [firestore, user]);
+
+  const { data: requests, isLoading: isRequestsLoading, error } = useCollection<Omit<WithdrawalRequest, 'id'>>(requestsQuery);
+
+  if (error) {
+    console.error("Error fetching withdrawal requests:", error);
+    // You might want to show a toast message to the admin here
+  }
+
+  const handleRequest = async (id: string, action: "approve" | "reject") => {
+    if (!firestore) return;
+    const request = requests?.find((r) => r.id === id);
     if (!request) return;
     
     const newStatus = action === "approve" ? "completed" : "rejected";
-
-    const updatedRequests = requests.map((r) =>
-      r.id === id ? { ...r, status: newStatus } : r
-    );
+    const requestRef = doc(firestore, 'withdrawalRequests', id);
 
     try {
-      localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(updatedRequests));
-      setRequests(updatedRequests);
+      await updateDoc(requestRef, {
+        status: newStatus,
+        processedAt: serverTimestamp()
+      });
+
       toast({
         title: `Solicitação ${newStatus === "completed" ? "Aprovada" : "Rejeitada"}`,
-        description: `O saque de ${request.amount} para ${request.userName} foi processado.`,
+        description: `O saque para ${request.userName} foi processado.`,
       });
     } catch (error) {
        console.error("Failed to update request:", error);
@@ -100,18 +90,18 @@ export default function AdminPage() {
     }
   };
 
-  const pendingRequests = requests.filter(req => req.status === 'pending');
-  const processedRequests = requests.filter(req => req.status === 'completed' || req.status === 'rejected');
-
-  // Guard clause: Show a full-page loader while checking auth or if user is not admin
-  // This prevents non-admins from seeing any content before redirection.
-  if (isUserLoading || !user || user.email !== ADMIN_EMAIL) {
+  const pendingRequests = requests?.filter(req => req.status === 'pending') ?? [];
+  const processedRequests = requests?.filter(req => req.status === 'completed' || req.status === 'rejected') ?? [];
+  
+  if (isAuthLoading || !user || user.email !== ADMIN_EMAIL) {
      return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
+
+  const dataLoading = isRequestsLoading;
 
   return (
     <div className="flex flex-col gap-6">
@@ -147,9 +137,9 @@ export default function AdminPage() {
                           <CardDescription>{req.userEmail}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-1 text-sm">
-                          <p><strong>Valor:</strong> {req.amount}</p>
+                          <p><strong>Valor:</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(req.amount)}</p>
                           <p><strong>Chave PIX:</strong> {req.pixKey}</p>
-                          <p><strong>Data:</strong> {req.date}</p>
+                          <p><strong>Data:</strong> {req.createdAt?.toDate().toLocaleDateString('pt-BR')}</p>
                         </CardContent>
                         <CardFooter className="flex justify-end space-x-2">
                           <Button
@@ -204,8 +194,8 @@ export default function AdminPage() {
                             </div>
                           </TableCell>
                           <TableCell>{req.pixKey}</TableCell>
-                          <TableCell>{req.amount}</TableCell>
-                          <TableCell>{req.date}</TableCell>
+                          <TableCell>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(req.amount)}</TableCell>
+                          <TableCell>{req.createdAt?.toDate().toLocaleDateString('pt-BR')}</TableCell>
                           <TableCell className="text-right space-x-2">
                             <Button
                               variant="ghost"
@@ -261,7 +251,7 @@ export default function AdminPage() {
               <div className="md:hidden">
                 {processedRequests.length > 0 ? (
                   <div className="space-y-4">
-                    {processedRequests.sort((a, b) => new Date(b.date.split('/').reverse().join('-')).getTime() - new Date(a.date.split('/').reverse().join('-')).getTime()).map((req) => (
+                    {processedRequests.map((req) => (
                       <Card key={req.id} className="pt-6">
                         <CardHeader className="py-0">
                           <div className="flex items-start justify-between">
@@ -275,9 +265,9 @@ export default function AdminPage() {
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-1 text-sm">
-                           <p><strong>Valor:</strong> {req.amount}</p>
+                           <p><strong>Valor:</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(req.amount)}</p>
                            <p><strong>Chave PIX:</strong> {req.pixKey}</p>
-                           <p><strong>Data:</strong> {req.date}</p>
+                           <p><strong>Data:</strong> {req.createdAt?.toDate().toLocaleDateString('pt-BR')}</p>
                         </CardContent>
                       </Card>
                     ))}
@@ -303,7 +293,7 @@ export default function AdminPage() {
                 </TableHeader>
                 <TableBody>
                   {processedRequests.length > 0 ? (
-                    processedRequests.sort((a, b) => new Date(b.date.split('/').reverse().join('-')).getTime() - new Date(a.date.split('/').reverse().join('-')).getTime()).map((req) => (
+                    processedRequests.map((req) => (
                       <TableRow key={req.id}>
                         <TableCell>
                           <div className="font-medium">{req.userName}</div>
@@ -312,8 +302,8 @@ export default function AdminPage() {
                           </div>
                         </TableCell>
                         <TableCell>{req.pixKey}</TableCell>
-                        <TableCell>{req.amount}</TableCell>
-                        <TableCell>{req.date}</TableCell>
+                        <TableCell>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(req.amount)}</TableCell>
+                        <TableCell>{req.createdAt?.toDate().toLocaleDateString('pt-BR')}</TableCell>
                         <TableCell className="text-right">
                            <Badge variant={req.status === 'completed' ? 'outline' : 'destructive'} className={req.status === 'completed' ? 'text-accent border-accent' : ''}>
                              {req.status === 'completed' ? 'Completo' : 'Rejeitado'}

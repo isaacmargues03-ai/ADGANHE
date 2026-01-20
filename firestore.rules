@@ -85,5 +85,36 @@ service cloud.firestore {
       allow update: if isExistingOwner(userId) && isIdImmutable();
       allow delete: if isExistingOwner(userId);
     }
+
+    /**
+     * @description Rules for withdrawal requests.
+     * @path /withdrawalRequests/{requestId}
+     * @allow (create) An authenticated user to create their own withdrawal request.
+     * @allow (get, list) Admins can read all requests. Users can read their own.
+     * @allow (update) Admins to update the status of any request.
+     * @deny (delete) No one can delete requests for auditing purposes.
+     * @principle Users manage their own requests, admins process them.
+     */
+    match /withdrawalRequests/{requestId} {
+      function isRequestOwner() {
+        return resource != null && request.auth.uid == resource.data.userId;
+      }
+      
+      function isCreatingOwnRequest() {
+        return request.auth.uid == request.resource.data.userId;
+      }
+
+      function isAdmin() {
+        // This is a simplified admin check for development. 
+        // For production, use custom claims for robust security.
+        return isSignedIn() && request.auth.token.email == "isaacmargues03@gmail.com";
+      }
+      
+      allow create: if isCreatingOwnRequest();
+      allow list: if isAdmin();
+      allow get: if isAdmin() || isRequestOwner();
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
   }
 }

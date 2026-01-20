@@ -12,24 +12,12 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { withdrawalRequests as initialRequests } from "@/lib/data";
 import { ArrowDown, ArrowUp, Banknote, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useUser } from "@/firebase";
+import { useState } from "react";
+import { useUser, useFirestore } from "@/firebase";
 import { useCredits } from "@/hooks/use-credits";
 import { useTransactions } from "@/hooks/use-transactions";
-
-type WithdrawalRequest = {
-  id: string;
-  userName: string;
-  userEmail: string;
-  amount: string;
-  pixKey: string;
-  date: string;
-  status: 'pending' | 'completed' | 'rejected';
-};
-
-const WITHDRAWALS_KEY = "adganhe-withdrawal-requests";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export default function WalletPage() {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
@@ -37,22 +25,13 @@ export default function WalletPage() {
   const [pixKey, setPixKey] = useState("");
   const { toast } = useToast();
   const { user } = useUser();
+  const firestore = useFirestore();
   const { credits, updateCredits, loading: creditsLoading } = useCredits();
   const { transactions, addTransaction, loading: transactionsLoading } = useTransactions();
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-        const storedRequests = localStorage.getItem(WITHDRAWALS_KEY);
-        if (storedRequests === null) {
-            localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(initialRequests));
-        }
-    }
-  }, []);
-
-
-  const handleWithdraw = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleWithdraw = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user || credits === null) return;
+    if (!user || credits === null || !firestore) return;
 
     const withdrawAmount = parseFloat(amount);
     
@@ -85,21 +64,19 @@ export default function WalletPage() {
 
     setIsWithdrawing(true);
 
-    const newRequest: WithdrawalRequest = {
-      id: `req${Date.now()}`,
+    const newRequest = {
+      userId: user.uid,
       userName: user.displayName || user.email || "Usuário Anônimo",
       userEmail: user.email || "Não informado",
-      amount: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(withdrawAmount),
+      amount: withdrawAmount,
       pixKey: pixKey,
-      date: new Intl.DateTimeFormat('pt-BR').format(new Date()),
-      status: 'pending',
+      status: 'pending' as const,
+      createdAt: serverTimestamp(),
     };
 
     try {
-      const storedRequests = localStorage.getItem(WITHDRAWALS_KEY);
-      const requests = storedRequests ? JSON.parse(storedRequests) : [];
-      const updatedRequests = [newRequest, ...requests];
-      localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(updatedRequests));
+      const requestsCollection = collection(firestore, 'withdrawalRequests');
+      await addDoc(requestsCollection, newRequest);
 
       updateCredits(-withdrawAmount);
       addTransaction({ description: "Solicitação de saque", amount: -withdrawAmount });
