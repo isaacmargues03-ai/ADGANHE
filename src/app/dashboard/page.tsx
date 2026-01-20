@@ -25,22 +25,6 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold tracking-tight">Bem-vindo de volta!</h1>
         <p className="text-muted-foreground">Aqui está sua visão geral de engajamento.</p>
       </div>
-
-      {/* Cartão de Pesquisas CPX Research */}
-      <div className="rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 p-5 text-white shadow-lg">
-        <h3 className="text-center text-lg font-black">🚀 TAREFA PREMIUM</h3>
-        <p className="mb-4 text-center text-sm">
-          Ganhe de R$ 1,00 a R$ 15,00 por pesquisa!
-        </p>
-        <button
-          onClick={openSurveys}
-          disabled={!user}
-          className="w-full cursor-pointer rounded-xl border-none bg-white p-3 font-bold text-emerald-700 transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          ABRIR PESQUISAS
-        </button>
-      </div>
-
       <div className="grid gap-4 md:grid-cols-2">
         <CreditBalance />
         {dashboardStats.map((stat, index) => (
