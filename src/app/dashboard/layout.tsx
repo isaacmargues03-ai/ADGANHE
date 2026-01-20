@@ -23,6 +23,7 @@ import {
   Loader2,
   Shield,
   MessageSquare,
+  ClipboardList,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppLogo } from "@/components/icons";
@@ -43,6 +44,7 @@ export default function DashboardLayout({
   const menuItems = [
     { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
     { href: "/dashboard/watch", label: "Assistir Anúncios", icon: Clapperboard },
+    { href: "/dashboard/surveys", label: "Pesquisas", icon: ClipboardList },
     { href: "/dashboard/wallet", label: "Carteira", icon: Wallet },
     ...(user?.email === ADMIN_EMAIL
       ? [{ href: "/dashboard/admin", label: "Admin", icon: Shield }]
@@ -80,7 +82,7 @@ export default function DashboardLayout({
           <SidebarMenu>
             {menuItems.map((item) => (
               <SidebarMenuItem key={item.href}>
-                <Link href={item.href} passHref legacyBehavior>
+                <Link href={item.href}>
                   <SidebarMenuButton
                     isActive={pathname === item.href}
                     tooltip={item.label}
@@ -137,7 +139,7 @@ export default function DashboardLayout({
             <span className="text-md font-semibold">ADGANHE</span>
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="flex flex-col flex-1 p-4 md:p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
