@@ -16,11 +16,12 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from "@/firebase";
+import { useAuth, useFirestore } from "@/firebase";
 import { 
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword
 } from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
@@ -37,6 +38,7 @@ type AuthFormProps = {
 export function AuthForm({ type }: AuthFormProps) {
   const { toast } = useToast();
   const auth = useAuth();
+  const firestore = useFirestore();
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -93,7 +95,20 @@ export function AuthForm({ type }: AuthFormProps) {
             .catch(handleAuthError);
     } else {
         createUserWithEmailAndPassword(auth, data.email, data.password)
-            .then(handleAuthSuccess)
+            .then(async (userCredential) => {
+              if (!firestore) return;
+              const user = userCredential.user;
+              const userDocRef = doc(firestore, 'users', user.uid);
+              await setDoc(userDocRef, {
+                id: user.uid,
+                email: user.email,
+                credits: 0,
+                registrationDate: serverTimestamp(),
+                lastLogin: serverTimestamp(),
+                username: user.email?.split('@')[0] ?? `user_${user.uid.substring(0,5)}`,
+              });
+              handleAuthSuccess();
+            })
             .catch(handleAuthError);
     }
   }

@@ -16,8 +16,8 @@ import { ArrowDown, ArrowUp, Banknote, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useUser, useFirestore } from "@/firebase";
 import { useCredits } from "@/hooks/use-credits";
-import { useTransactions } from "@/hooks/use-transactions";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useTransactions, type Transaction } from "@/hooks/use-transactions";
+import { collection, addDoc, serverTimestamp, updateDoc, doc, increment } from "firebase/firestore";
 
 export default function WalletPage() {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
@@ -26,7 +26,7 @@ export default function WalletPage() {
   const { toast } = useToast();
   const { user } = useUser();
   const firestore = useFirestore();
-  const { credits, updateCredits, loading: creditsLoading } = useCredits();
+  const { credits, loading: creditsLoading } = useCredits();
   const { transactions, addTransaction, loading: transactionsLoading } = useTransactions();
 
   const handleWithdraw = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -75,11 +75,19 @@ export default function WalletPage() {
     };
 
     try {
+      // 1. Create the withdrawal request
       const requestsCollection = collection(firestore, 'withdrawalRequests');
       await addDoc(requestsCollection, newRequest);
 
-      updateCredits(-withdrawAmount);
+      // 2. Atomically decrement the user's credits
+      const userDocRef = doc(firestore, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        credits: increment(-withdrawAmount)
+      });
+      
+      // 3. Add a transaction record
       addTransaction({ description: "Solicitação de saque", amount: -withdrawAmount });
+      
       setAmount("");
       setPixKey("");
       toast({
@@ -157,7 +165,7 @@ export default function WalletPage() {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : transactions.length > 0 ? (
-            transactions.map((txn) => (
+            transactions.map((txn: Transaction) => (
               <div key={txn.id} className="flex items-center">
                 <div
                   className={`p-2 rounded-full mr-3 ${
@@ -174,7 +182,9 @@ export default function WalletPage() {
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-sm">{txn.description}</p>
-                  <p className="text-xs text-muted-foreground">{txn.date}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {txn.createdAt?.toDate().toLocaleDateString('pt-BR') ?? '...'}
+                  </p>
                 </div>
                 <p
                   className={`font-semibold text-sm ${

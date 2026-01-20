@@ -82,8 +82,22 @@ service cloud.firestore {
       allow get: if isOwner(userId);
       allow list: if false;
       allow create: if isOwner(userId) && hasValidUserIdOnCreate(userId);
-      allow update: if isExistingOwner(userId) && isIdImmutable();
+      // WARNING: This allows users to update any field on their own document, including 'credits'.
+      // For production, you should implement more granular control, e.g., using Cloud Functions
+      // for trusted credit updates, or more complex rules to validate the increment.
+      allow update: if isOwner(userId) && isIdImmutable();
       allow delete: if isExistingOwner(userId);
+      
+      /**
+       * @description Rules for user transactions.
+       * @path /users/{userId}/transactions/{transactionId}
+       * @allow (list, create) A user can list and create their own transactions.
+       * @deny (update, delete) Transactions are immutable records.
+       */
+      match /transactions/{transactionId} {
+        allow list, create: if isOwner(userId);
+        allow get, update, delete: if false;
+      }
     }
 
     /**
@@ -97,20 +111,21 @@ service cloud.firestore {
      */
     match /withdrawalRequests/{requestId} {
       function isRequestOwner() {
+        // Checking request body for 'create' operation
+        if (request.method == 'create') {
+          return request.auth.uid == request.resource.data.userId;
+        }
+        // Checking existing resource for 'get' operation
         return resource != null && request.auth.uid == resource.data.userId;
       }
       
-      function isCreatingOwnRequest() {
-        return request.auth.uid == request.resource.data.userId;
-      }
-
       function isAdmin() {
         // This is a simplified admin check for development. 
         // For production, use custom claims for robust security.
         return isSignedIn() && request.auth.token.email == "isaacmargues03@gmail.com";
       }
       
-      allow create: if isCreatingOwnRequest();
+      allow create: if isRequestOwner();
       allow list: if isAdmin();
       allow get: if isAdmin() || isRequestOwner();
       allow update: if isAdmin();

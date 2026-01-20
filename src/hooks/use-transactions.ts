@@ -1,68 +1,41 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useUser } from "@/firebase";
+import { useCallback } from "react";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, addDoc, serverTimestamp, query, orderBy, Timestamp } from "firebase/firestore";
 
 export type Transaction = {
   id: string;
   description: string;
   amount: number;
-  date: string;
+  createdAt: Timestamp;
 };
-
-const getTransactionsKey = (userId: string) => `adganhe-transactions-${userId}`;
 
 export function useTransactions() {
   const { user, isUserLoading } = useUser();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
+  const firestore = useFirestore();
 
-  useEffect(() => {
-    if (isUserLoading) {
-        setLoading(true);
-        return;
-    }
+  const transactionsQuery = useMemoFirebase(() => {
+      if (!user || !firestore) return null;
+      return query(
+          collection(firestore, "users", user.uid, "transactions"),
+          orderBy("createdAt", "desc")
+      );
+  }, [user, firestore]);
 
-    if (user) {
-      try {
-        const transactionsKey = getTransactionsKey(user.uid);
-        const storedTransactions = localStorage.getItem(transactionsKey);
-        if (storedTransactions) {
-          setTransactions(JSON.parse(storedTransactions));
-        } else {
-          setTransactions([]);
-        }
-      } catch (error) {
-        console.error("Could not access localStorage for transactions:", error);
-        setTransactions([]);
-      } finally {
-        setLoading(false);
-      }
-    } else {
-        setTransactions([]);
-        setLoading(false);
-    }
-  }, [user, isUserLoading]);
+  const { data: transactions, isLoading: isTransactionsLoading } = useCollection<Omit<Transaction, 'id'>>(transactionsQuery);
 
   const addTransaction = useCallback((transactionDetails: { description: string, amount: number }) => {
-    if (user) {
-      setTransactions((prevTransactions) => {
-        const newTransaction: Transaction = {
-          ...transactionDetails,
-          id: `txn-${Date.now()}`,
-          date: new Intl.DateTimeFormat('pt-BR').format(new Date()),
-        };
-        const newTransactions = [newTransaction, ...prevTransactions];
-        try {
-          const transactionsKey = getTransactionsKey(user.uid);
-          localStorage.setItem(transactionsKey, JSON.stringify(newTransactions));
-        } catch (error) {
-          console.error("Could not save transactions to localStorage:", error);
-        }
-        return newTransactions;
+    if (user && firestore) {
+      const transactionsColRef = collection(firestore, "users", user.uid, "transactions");
+      addDoc(transactionsColRef, {
+        ...transactionDetails,
+        createdAt: serverTimestamp()
       });
     }
-  }, [user]);
+  }, [user, firestore]);
+  
+  const loading = isUserLoading || isTransactionsLoading;
 
-  return { transactions, addTransaction, loading };
+  return { transactions: transactions ?? [], addTransaction, loading };
 }

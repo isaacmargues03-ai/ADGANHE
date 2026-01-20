@@ -19,6 +19,10 @@
           "description": "The email address of the user.",
           "format": "email"
         },
+        "credits": {
+            "type": "number",
+            "description": "The user's available credits in BRL."
+        },
         "registrationDate": {
           "type": "string",
           "description": "The date and time the user registered.",
@@ -34,8 +38,30 @@
         "id",
         "username",
         "email",
-        "registrationDate"
+        "registrationDate",
+        "credits"
       ]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "type": "object",
+      "description": "Represents a credit or debit transaction in a user's account.",
+      "properties": {
+        "amount": {
+          "type": "number",
+          "description": "The transaction amount. Positive for credits, negative for debits."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the transaction."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the transaction occurred."
+        }
+      },
+      "required": ["amount", "description", "createdAt"]
     },
     "WithdrawalRequest": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -115,6 +141,24 @@
             {
               "name": "userId",
               "description": "The unique identifier for the user, matching the Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+       {
+        "path": "/users/{userId}/transactions/{transactionId}",
+        "definition": {
+          "entityName": "Transaction",
+          "schema": { "$ref": "#/backend/entities/Transaction" },
+          "description": "Stores all credit/debit transactions for a specific user.",
+           "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "transactionId",
+              "description": "The unique identifier for the transaction."
             }
           ]
         }
