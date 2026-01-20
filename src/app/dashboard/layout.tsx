@@ -23,6 +23,7 @@ import {
   Loader2,
   Shield,
   MessageSquare,
+  ClipboardList,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppLogo } from "@/components/icons";
@@ -44,6 +45,7 @@ export default function DashboardLayout({
     { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
     { href: "/dashboard/watch", label: "Assistir Anúncios", icon: Clapperboard },
     { href: "/dashboard/wallet", label: "Carteira", icon: Wallet },
+    { href: "/dashboard/surveys", label: "Pesquisas CPX", icon: ClipboardList },
     ...(user?.email === ADMIN_EMAIL
       ? [{ href: "/dashboard/admin", label: "Admin", icon: Shield }]
       : []),
