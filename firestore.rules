@@ -91,12 +91,12 @@ service cloud.firestore {
       /**
        * @description Rules for user transactions.
        * @path /users/{userId}/transactions/{transactionId}
-       * @allow (list, create) A user can list and create their own transactions.
+       * @allow (list, create, get) A user can list, create, and read their own transactions.
        * @deny (update, delete) Transactions are immutable records.
        */
       match /transactions/{transactionId} {
-        allow list, create: if isOwner(userId);
-        allow get, update, delete: if false;
+        allow get, list, create: if isOwner(userId);
+        allow update, delete: if false;
       }
     }
 
