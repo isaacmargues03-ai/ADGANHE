@@ -14,46 +14,43 @@ export default function WatchPage() {
 
   const [cliques, setCliques] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [countdown, setCountdown] = useState<number | null>(null);
+  const [ultimoClique, setUltimoClique] = useState<number | null>(null);
   const [adWindowOpened, setAdWindowOpened] = useState(false);
 
   const totalNecessario = 3;
   const rewardAmount = 0.02;
   const adUrl = "https://otieu.com/4/10488966";
-  const adWaitTime = 20; // seconds
+  const adWaitTime = 15; // seconds
 
-  // Efeito para o cronômetro regressivo
+  // Efeito para verificar o tempo quando o usuário volta para a aba
   useEffect(() => {
-    if (countdown === null) return;
-
-    if (countdown > 0) {
-      const timerId = setTimeout(() => {
-        setCountdown(countdown - 1);
-      }, 1000);
-      return () => clearTimeout(timerId);
-    }
-
-    if (countdown === 0) {
-      setCountdown(null); // Reseta o timer
-      setCliques(prev => {
-        const newCliques = prev + 1;
-         toast({
-          title: "Visualização Contabilizada!",
-          description: `Progresso da Missão: ${newCliques} de ${totalNecessario}.`,
-        });
-        return newCliques;
-      });
-    }
-  }, [countdown, toast, totalNecessario]);
-
-  // Efeito para detectar quando o usuário volta para a aba
-  useEffect(() => {
-    if (!adWindowOpened) return;
+    if (!adWindowOpened || !ultimoClique) return;
 
     const handleFocus = () => {
+      const agora = Date.now();
+      const tempoPassado = (agora - ultimoClique) / 1000; // em segundos
+
+      if (tempoPassado >= adWaitTime) {
+        setCliques(prev => {
+          const newCliques = prev + 1;
+          toast({
+            title: "Anúncio Validado!",
+            description: `Progresso da Missão: ${newCliques} de ${totalNecessario}.`,
+          });
+          return newCliques;
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Muito Rápido!",
+          description: `Você precisa ver o anúncio por pelo menos ${adWaitTime}s. Faltam ${Math.ceil(adWaitTime - tempoPassado)}s.`,
+        });
+      }
+      
+      // Limpa o estado e o listener
       setAdWindowOpened(false);
-      setCountdown(adWaitTime); // Inicia o cronômetro
-      window.removeEventListener('focus', handleFocus); // Limpa o listener
+      setUltimoClique(null);
+      window.removeEventListener('focus', handleFocus);
     };
 
     window.addEventListener('focus', handleFocus);
@@ -61,11 +58,14 @@ export default function WatchPage() {
     return () => {
       window.removeEventListener('focus', handleFocus);
     };
-  }, [adWindowOpened]);
+  }, [adWindowOpened, ultimoClique, toast, totalNecessario, adWaitTime]);
 
   const handleAnuncio = () => {
-    if (countdown !== null || adWindowOpened) return;
+    // Não faz nada se já estivermos aguardando uma verificação
+    if (adWindowOpened) return;
 
+    // Salva o horário do clique e abre o anúncio
+    setUltimoClique(Date.now());
     const newWindow = window.open(adUrl, '_blank');
     
     if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
@@ -74,13 +74,15 @@ export default function WatchPage() {
         title: "Pop-up Bloqueado",
         description: "Por favor, desative seu bloqueador de anúncios para completar a tarefa.",
       });
+      setUltimoClique(null); // Reseta se a janela não abrir
     } else {
+      // Define que estamos aguardando o usuário voltar
       setAdWindowOpened(true);
     }
   };
 
   const resgatarRecompensa = () => {
-    if (isProcessing || countdown !== null) return;
+    if (isProcessing) return;
 
     setIsProcessing(true);
 
@@ -106,9 +108,7 @@ export default function WatchPage() {
     }
   };
   
-  const isCountingDown = countdown !== null;
-  const isWaitingForFocus = adWindowOpened;
-  const isBusy = isCountingDown || isWaitingForFocus;
+  const isBusy = adWindowOpened;
 
   return (
     <div className="flex flex-col gap-6">
@@ -132,10 +132,8 @@ export default function WatchPage() {
                   size="lg"
                   disabled={isBusy || isProcessing}
                 >
-                   {isWaitingForFocus
-                    ? "Volte aqui para iniciar o cronômetro..."
-                    : isCountingDown 
-                    ? `Aguarde ${countdown}s...`
+                   {isBusy
+                    ? "Volte para validar o anúncio..."
                     : (cliques === 0 ? "Começar Tarefa" : "Ver Próximo Anúncio")
                   }
                 </Button>
