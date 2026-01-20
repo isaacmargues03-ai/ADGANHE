@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useCredits } from "@/hooks/use-credits";
 import { useToast } from "@/hooks/use-toast";
@@ -14,35 +14,58 @@ export default function WatchPage() {
 
   const [cliques, setCliques] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+
   const totalNecessario = 3;
   const rewardAmount = 0.02;
   const adUrl = "https://otieu.com/4/10488966";
+  const adWaitTime = 20; // seconds
+
+  useEffect(() => {
+    if (countdown === null) return;
+
+    if (countdown > 0) {
+      const timerId = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+      return () => clearTimeout(timerId);
+    }
+
+    if (countdown === 0) {
+      setCountdown(null); // Reset timer
+      setCliques(prev => {
+        const newCliques = prev + 1;
+         toast({
+          title: "Visualização Contabilizada!",
+          description: `Progresso da Missão: ${newCliques} de ${totalNecessario}.`,
+        });
+        return newCliques;
+      });
+    }
+  }, [countdown, toast, totalNecessario]);
 
   const handleAnuncio = () => {
+    if (countdown !== null) return;
+
     const newWindow = window.open(adUrl, '_blank');
     
     if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-      // Pop-up foi bloqueado
       toast({
         variant: "destructive",
         title: "Pop-up Bloqueado",
         description: "Por favor, desative seu bloqueador de anúncios para completar a tarefa.",
       });
     } else {
-      // Aumenta o contador de cliques
-      setCliques(prev => prev + 1);
+      setCountdown(adWaitTime);
     }
   };
 
   const resgatarRecompensa = () => {
-    // 1. Se já estiver processando, o clique é ignorado totalmente
-    if (isProcessing) return;
+    if (isProcessing || countdown !== null) return;
 
-    // 2. Bloqueia o botão imediatamente
     setIsProcessing(true);
 
     try {
-      // 3. Verifica se ele realmente viu os 3 anúncios
       if (cliques >= totalNecessario) {
         updateCredits(rewardAmount);
         addTransaction({ description: "Recompensa de Tarefa", amount: rewardAmount });
@@ -50,7 +73,6 @@ export default function WatchPage() {
           title: "Recompensa Resgatada!",
           description: `Parabéns! R$ ${rewardAmount.toFixed(2)} adicionados à sua carteira.`,
         });
-        // 4. Reseta os anúncios para 0 IMEDIATAMENTE
         setCliques(0);
       }
     } catch (error) {
@@ -61,11 +83,11 @@ export default function WatchPage() {
             description: "Não foi possível resgatar a recompensa.",
         });
     } finally {
-      // 5. Só libera o botão de novo depois de 2 segundos (anti-spam)
       setTimeout(() => setIsProcessing(false), 2000);
     }
   };
-
+  
+  const isWaiting = countdown !== null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -87,9 +109,12 @@ export default function WatchPage() {
                 <Button 
                   onClick={handleAnuncio}
                   size="lg"
-                  disabled={isProcessing}
+                  disabled={isWaiting || isProcessing}
                 >
-                  {cliques === 0 ? "Começar Tarefa" : "Ver Próximo Anúncio"}
+                   {isWaiting 
+                    ? `Aguarde ${countdown}s...`
+                    : (cliques === 0 ? "Começar Tarefa" : "Ver Próximo Anúncio")
+                  }
                 </Button>
                 <div className="text-center">
                     <p className="text-xs text-muted-foreground">Acesse a página, aguarde o site abrir e volte.</p>
