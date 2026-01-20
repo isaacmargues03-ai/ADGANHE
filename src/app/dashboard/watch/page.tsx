@@ -17,7 +17,7 @@ export default function WatchPage() {
   const [ultimoClique, setUltimoClique] = useState<number | null>(null);
   const [adWindowOpened, setAdWindowOpened] = useState(false);
 
-  const totalNecessario = 5;
+  const totalNecessario = 3;
   const rewardAmount = 0.02;
   const adUrl = "https://otieu.com/4/10488966";
   const adWaitTime = 15; // seconds
