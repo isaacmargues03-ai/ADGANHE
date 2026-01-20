@@ -95,7 +95,7 @@ service cloud.firestore {
        * @deny (update, delete) Transactions are immutable records.
        */
       match /transactions/{transactionId} {
-        allow get, list, create: if isOwner(userId);
+        allow read, create: if isOwner(userId);
         allow update, delete: if false;
       }
     }
