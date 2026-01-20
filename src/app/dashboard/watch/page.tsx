@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useCredits } from "@/hooks/use-credits";
 import { useToast } from "@/hooks/use-toast";
 import { useTransactions } from "@/hooks/use-transactions";
+import { Loader2 } from "lucide-react";
 
 export default function WatchPage() {
   const { updateCredits } = useCredits();
@@ -12,6 +13,7 @@ export default function WatchPage() {
   const { toast } = useToast();
 
   const [cliques, setCliques] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
   const totalNecessario = 3;
   const rewardAmount = 0.02;
   const adUrl = "https://otieu.com/4/10488966";
@@ -33,7 +35,11 @@ export default function WatchPage() {
   };
 
   const resgatarRecompensa = () => {
-    if (cliques >= totalNecessario) {
+    if (cliques < totalNecessario || isProcessing) return;
+
+    setIsProcessing(true);
+    
+    try {
       updateCredits(rewardAmount);
       addTransaction({ description: "Recompensa de Tarefa", amount: rewardAmount });
       toast({
@@ -41,6 +47,8 @@ export default function WatchPage() {
         description: `Parabéns! R$ ${rewardAmount.toFixed(2)} adicionados à sua carteira.`,
       });
       setCliques(0); // Reinicia para a próxima
+    } finally {
+        setIsProcessing(false);
     }
   };
 
@@ -77,9 +85,17 @@ export default function WatchPage() {
             <Button 
                 onClick={resgatarRecompensa}
                 size="lg"
+                disabled={isProcessing}
                 className="bg-accent text-accent-foreground hover:bg-accent/90 animate-bounce"
             >
-                RESGATAR R$ {rewardAmount.toFixed(2)}
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  `RESGATAR R$ ${rewardAmount.toFixed(2)}`
+                )}
             </Button>
         )}
       </div>
