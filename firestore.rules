@@ -1,127 +1,26 @@
-/**
- * Core Philosophy: This ruleset enforces a strict user-ownership model. All data is
- * stored within a user-specific document, and access is restricted to the authenticated
- * owner of that data. The primary goal is to ensure user privacy and data isolation.
- *
- * Data Structure: The data is organized under a top-level `users` collection. Each
- * document within this collection is identified by a user's unique Firebase
- * Authentication UID (`/users/{userId}`).
- *
- * Key Security Decisions:
- * - User Isolation: A user can only read, create, update, or delete their own
- *   user document. They cannot access or even know about the existence of other users.
- * - No User Listing: Listing the entire `/users` collection is explicitly disallowed
- *   to prevent scraping user information and to protect user privacy.
- * - Self-Creation: A newly authenticated user is permitted to create their own
- *   user profile document, establishing their presence in the database.
- *
- * Denormalization for Authorization: The document ID (`userId`) is the Firebase Auth
- * UID, which is the primary key for authorization. To ensure integrity, the rules
- * require that an `id` field inside the document data must match this `userId` upon
- * creation and remain immutable thereafter.
- *
- * Structural Segregation: Not applicable in this model as all data is inherently
- * private to the user.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions for concise and readable rules.
-
-    /**
-     * Checks if the user is authenticated.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * Checks if the currently authenticated user's UID matches the requested userId.
-     */
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+    // Grant users full read/write access to all documents under their own user path.
+    match /users/{userId}/{document=**} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * Checks for ownership on an existing document. Used for update and delete
-     * operations to prevent acting on non-existent data.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /**
-     * (CREATE) Validates that the 'id' field within a new user document matches
-     * the document's ID, which is the user's auth UID. This creates an unbreakable
-     * link between the document and its owner.
-     */
-    function hasValidUserIdOnCreate(userId) {
-      return request.resource.data.id == userId;
-    }
-
-    /**
-     * (UPDATE) Validates that the 'id' field within a user document is not changed
-     * after creation. This prevents re-assigning the document to another user.
-     */
-    function isIdImmutable() {
-      return request.resource.data.id == resource.data.id;
-    }
-
-
-    /**
-     * @description Rules for a user's own profile document.
-     * @path /users/{userId}
-     * @allow (get, update, delete) An authenticated user with UID 'user123' to get, update, or delete their own document at `/users/user123`.
-     * @allow (create) A new user with UID 'user456' to create their profile at `/users/user456`, provided the document data contains `id: 'user456'`.
-     * @deny (get) A user with UID 'user789' attempting to read data from `/users/user123`.
-     * @deny (list) Any user, including an admin, from listing all documents in the `/users` collection.
-     * @principle Restricts access to a user's own data tree, enforcing privacy and ownership.
-     */
-    match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
-      allow create: if isOwner(userId) && hasValidUserIdOnCreate(userId);
-      // WARNING: This allows users to update any field on their own document, including 'credits'.
-      // For production, you should implement more granular control, e.g., using Cloud Functions
-      // for trusted credit updates, or more complex rules to validate the increment.
-      allow update: if isOwner(userId) && isIdImmutable();
-      allow delete: if isExistingOwner(userId);
-      
-      /**
-       * @description Rules for user transactions.
-       * @path /users/{userId}/transactions/{transactionId}
-       * @allow (list, create, get) A user can list, create, and read their own transactions.
-       * @deny (update, delete) Transactions are immutable records.
-       */
-      match /transactions/{transactionId} {
-        allow read, create: if isOwner(userId);
-        allow update, delete: if false;
-      }
-    }
-
-    /**
-     * @description Rules for withdrawal requests.
-     * @path /withdrawalRequests/{requestId}
-     * @allow (create) An authenticated user to create their own withdrawal request.
-     * @allow (get, list) Admins can read all requests. Users can read their own.
-     * @allow (update) Admins to update the status of any request.
-     * @deny (delete) No one can delete requests for auditing purposes.
-     * @principle Users manage their own requests, admins process them.
-     */
+    // Rules for withdrawal requests, managed by users and processed by admins.
     match /withdrawalRequests/{requestId} {
       function isRequestOwner() {
-        // Checking request body for 'create' operation
-        if (request.method == 'create') {
-          return request.auth.uid == request.resource.data.userId;
-        }
-        // Checking existing resource for 'get' operation
-        return resource != null && request.auth.uid == resource.data.userId;
+        // On create, check incoming data. On read, check existing data.
+        return (request.method == 'create' && request.auth.uid == request.resource.data.userId)
+            || (resource != null && request.auth.uid == resource.data.userId);
       }
       
       function isAdmin() {
-        // This is a simplified admin check for development. 
-        // For production, use custom claims for robust security.
+        // For production, use custom claims. This is for development.
         return isSignedIn() && request.auth.token.email == "isaacmargues03@gmail.com";
       }
       
