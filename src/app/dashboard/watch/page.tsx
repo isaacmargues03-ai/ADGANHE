@@ -15,12 +15,14 @@ export default function WatchPage() {
   const [cliques, setCliques] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [adWindowOpened, setAdWindowOpened] = useState(false);
 
   const totalNecessario = 3;
   const rewardAmount = 0.02;
   const adUrl = "https://otieu.com/4/10488966";
   const adWaitTime = 20; // seconds
 
+  // Efeito para o cronômetro regressivo
   useEffect(() => {
     if (countdown === null) return;
 
@@ -32,7 +34,7 @@ export default function WatchPage() {
     }
 
     if (countdown === 0) {
-      setCountdown(null); // Reset timer
+      setCountdown(null); // Reseta o timer
       setCliques(prev => {
         const newCliques = prev + 1;
          toast({
@@ -44,8 +46,25 @@ export default function WatchPage() {
     }
   }, [countdown, toast, totalNecessario]);
 
+  // Efeito para detectar quando o usuário volta para a aba
+  useEffect(() => {
+    if (!adWindowOpened) return;
+
+    const handleFocus = () => {
+      setAdWindowOpened(false);
+      setCountdown(adWaitTime); // Inicia o cronômetro
+      window.removeEventListener('focus', handleFocus); // Limpa o listener
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [adWindowOpened]);
+
   const handleAnuncio = () => {
-    if (countdown !== null) return;
+    if (countdown !== null || adWindowOpened) return;
 
     const newWindow = window.open(adUrl, '_blank');
     
@@ -56,7 +75,7 @@ export default function WatchPage() {
         description: "Por favor, desative seu bloqueador de anúncios para completar a tarefa.",
       });
     } else {
-      setCountdown(adWaitTime);
+      setAdWindowOpened(true);
     }
   };
 
@@ -87,7 +106,9 @@ export default function WatchPage() {
     }
   };
   
-  const isWaiting = countdown !== null;
+  const isCountingDown = countdown !== null;
+  const isWaitingForFocus = adWindowOpened;
+  const isBusy = isCountingDown || isWaitingForFocus;
 
   return (
     <div className="flex flex-col gap-6">
@@ -109,9 +130,11 @@ export default function WatchPage() {
                 <Button 
                   onClick={handleAnuncio}
                   size="lg"
-                  disabled={isWaiting || isProcessing}
+                  disabled={isBusy || isProcessing}
                 >
-                   {isWaiting 
+                   {isWaitingForFocus
+                    ? "Volte aqui para iniciar o cronômetro..."
+                    : isCountingDown 
                     ? `Aguarde ${countdown}s...`
                     : (cliques === 0 ? "Começar Tarefa" : "Ver Próximo Anúncio")
                   }
