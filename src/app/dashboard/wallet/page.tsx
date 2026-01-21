@@ -83,7 +83,8 @@ export default function WalletPage() {
       const userDocRef = doc(firestore, 'users', user.uid);
       await updateDoc(userDocRef, {
         credits: increment(-withdrawAmount),
-        score: increment(-withdrawAmount)
+        score: increment(-withdrawAmount),
+        saldo: increment(-withdrawAmount)
       });
       
       // 3. Add a transaction record

@@ -113,6 +113,7 @@ export function AuthForm({ type }: AuthFormProps) {
                     email: user.email,
                     credits: 0,
                     score: 0,
+                    saldo: 0,
                     registrationDate: serverTimestamp(),
                     lastLogin: serverTimestamp(),
                     username: user.email?.split('@')[0] ?? `user_${user.uid.substring(0,5)}`,

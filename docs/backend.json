@@ -27,6 +27,10 @@
           "type": "number",
           "description": "Legacy field for user's score, kept in sync with credits."
         },
+        "saldo": {
+          "type": "number",
+          "description": "Legacy field for user's balance, also kept in sync with credits for consistency."
+        },
         "registrationDate": {
           "type": "string",
           "description": "The date and time the user registered.",
@@ -44,7 +48,8 @@
         "email",
         "registrationDate",
         "credits",
-        "score"
+        "score",
+        "saldo"
       ]
     },
     "Transaction": {
