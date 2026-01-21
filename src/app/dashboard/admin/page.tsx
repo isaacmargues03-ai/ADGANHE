@@ -24,7 +24,7 @@ import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { collection, query, orderBy, doc, updateDoc, serverTimestamp, Timestamp, where, getDocs, runTransaction, increment, getDoc } from "firebase/firestore";
+import { collection, query, orderBy, doc, updateDoc, serverTimestamp, Timestamp, where, getDocs, runTransaction, getDoc } from "firebase/firestore";
 import { Separator } from "@/components/ui/separator";
 
 type WithdrawalRequest = {
@@ -43,6 +43,7 @@ type SearchedUser = {
     email: string;
     credits: number;
     score?: number;
+    saldo?: number;
     registrationDate?: Timestamp;
 }
 
@@ -160,16 +161,12 @@ export default function AdminPage() {
     const amount = parseFloat(adjustmentAmount);
     const reason = adjustmentReason.trim();
 
-    if (!email) {
-      toast({ variant: "destructive", title: "E-mail Inválido", description: "Por favor, insira um e-mail." });
-      return;
-    }
-    if (isNaN(amount)) {
-      toast({ variant: "destructive", title: "Valor Inválido", description: "Por favor, insira um valor numérico válido." });
-      return;
-    }
-    if (!reason) {
-      toast({ variant: "destructive", title: "Motivo Inválido", description: "Por favor, forneça um motivo para o ajuste." });
+    if (!email || isNaN(amount) || !reason) {
+      toast({
+        variant: "destructive",
+        title: "Campos Inválidos",
+        description: "Por favor, preencha todos os campos corretamente.",
+      });
       return;
     }
 
@@ -180,80 +177,107 @@ export default function AdminPage() {
       const userQuery = query(usersRef, where("email", "==", email));
       const userSnapshot = await getDocs(userQuery);
 
-      let userDocRef;
       let userId;
 
       if (!userSnapshot.empty) {
-        // User found in 'users' collection
+        // --- UPDATE ---
         const userDoc = userSnapshot.docs[0];
         userId = userDoc.id;
-        userDocRef = doc(firestore, "users", userId);
+        const userDocRef = userDoc.ref;
 
-        // Run transaction to update existing user
         await runTransaction(firestore, async (transaction) => {
-            transaction.update(userDocRef, {
-                credits: increment(amount),
-                score: increment(amount)
-            });
-            const newTransactionRef = doc(collection(firestore, "users", userId, "transactions"));
-            transaction.set(newTransactionRef, {
-                description: reason,
-                amount: amount,
-                createdAt: serverTimestamp(),
-            });
+          const freshUserDoc = await transaction.get(userDocRef);
+          const currentCredits = freshUserDoc.data()?.credits ?? 0;
+          const newCredits = currentCredits + amount;
+          
+          transaction.update(userDocRef, {
+            credits: newCredits,
+            score: newCredits,
+            saldo: newCredits // Sync all fields
+          });
+
+          const newTransactionRef = doc(collection(firestore, "users", userId, "transactions"));
+          transaction.set(newTransactionRef, {
+            description: reason,
+            amount: amount,
+            createdAt: serverTimestamp(),
+          });
         });
 
       } else {
-        // User NOT found in 'users', check 'withdrawalRequests'
+        // --- INSERT ---
+        // User not found in 'users'. Check 'withdrawalRequests' to find existing UID.
         const requestsRef = collection(firestore, "withdrawalRequests");
+        // Simplified query without orderBy to avoid index requirement
         const requestsQuery = query(requestsRef, where("userEmail", "==", email));
         const requestsSnapshot = await getDocs(requestsQuery);
 
-        if (requestsSnapshot.empty) {
-            // User not found anywhere, show error
-            toast({ variant: "destructive", title: "Usuário não encontrado", description: `Nenhum usuário encontrado com o e-mail ${email} na base de dados.` });
-            setIsAdjusting(false);
-            return;
-        }
+        if (!requestsSnapshot.empty) {
+            // Found user in withdrawal history, use their original UID to create the user doc
+            userId = requestsSnapshot.docs[0].data().userId;
+            if (!userId) {
+                throw new Error(`Histórico de saque encontrado para ${email}, mas não contém um ID de usuário.`);
+            }
+            
+            const userDocRef = doc(firestore, "users", userId);
+            
+            await runTransaction(firestore, async (transaction) => {
+                // Set new user document
+                transaction.set(userDocRef, {
+                    id: userId,
+                    email: email,
+                    credits: amount,
+                    score: amount,
+                    saldo: amount, // Sync all fields
+                    registrationDate: serverTimestamp(),
+                    lastLogin: serverTimestamp(),
+                    username: email.split('@')[0] ?? `user_${userId.substring(0,5)}`,
+                });
+                // Add first transaction
+                const newTransactionRef = doc(collection(firestore, "users", userId, "transactions"));
+                transaction.set(newTransactionRef, {
+                    description: reason,
+                    amount: amount,
+                    createdAt: serverTimestamp(),
+                });
+            });
+        } else {
+            // User not found anywhere. Force-create a new user document.
+            console.warn(`Creating new user document for ${email} as they were not found in 'users' or 'withdrawalRequests'. This may lead to an orphaned document if an auth user already exists.`);
+            
+            const newUserDocRef = doc(collection(firestore, "users")); // Firestore generates ID
+            userId = newUserDocRef.id;
 
-        // User found in withdrawal requests, create a new document in 'users'
-        userId = requestsSnapshot.docs[0].data().userId;
-        if (!userId) {
-             toast({ variant: "destructive", title: "Erro de Dados", description: `Histórico de saque encontrado para ${email}, mas não contém um ID de usuário.` });
-             setIsAdjusting(false);
-             return;
+            await runTransaction(firestore, async (transaction) => {
+                transaction.set(newUserDocRef, {
+                    id: userId,
+                    email: email,
+                    credits: amount,
+                    score: amount,
+                    saldo: amount, // Sync all fields
+                    registrationDate: serverTimestamp(),
+                    lastLogin: serverTimestamp(),
+                    username: email.split('@')[0] ?? `user_${userId.substring(0,5)}`,
+                });
+                const newTransactionRef = doc(collection(firestore, "users", userId, "transactions"));
+                transaction.set(newTransactionRef, {
+                    description: reason,
+                    amount: amount,
+                    createdAt: serverTimestamp(),
+                });
+            });
         }
-        
-        userDocRef = doc(firestore, "users", userId);
-        
-        // Run transaction to create new user and add transaction
-        await runTransaction(firestore, async (transaction) => {
-            transaction.set(userDocRef, {
-                id: userId,
-                email: email,
-                credits: amount, // Set initial credits to the adjustment amount
-                score: amount,   // Set initial score to the adjustment amount
-                registrationDate: serverTimestamp(),
-                lastLogin: serverTimestamp(),
-                username: email.split('@')[0] ?? `user_${userId.substring(0,5)}`,
-            });
-            const newTransactionRef = doc(collection(firestore, "users", userId, "transactions"));
-            transaction.set(newTransactionRef, {
-                description: reason,
-                amount: amount,
-                createdAt: serverTimestamp(),
-            });
-        });
       }
 
       toast({
-        title: "Saldo Ajustado!",
+        title: "Saldo Aplicado com Sucesso!",
         description: `O saldo de ${email} foi ajustado em ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount)}.`,
       });
 
-      // Refresh searched user data if they are being displayed
-      if (searchedUser && searchedUser.id === userId) {
-        const updatedUserDoc = await getDoc(userDocRef);
+      // Refresh displayed data if applicable
+      if (searchedUser && searchedUser.email === email) {
+        const finalUserDocRef = doc(firestore, "users", userId);
+        const updatedUserDoc = await getDoc(finalUserDocRef);
         if (updatedUserDoc.exists()) {
           setSearchedUser({ id: updatedUserDoc.id, ...updatedUserDoc.data() } as SearchedUser);
         }
