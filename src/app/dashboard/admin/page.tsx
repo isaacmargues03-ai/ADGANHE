@@ -24,8 +24,7 @@ import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { collection, query, orderBy, doc, updateDoc, serverTimestamp, Timestamp, where, getDocs, setDoc, increment } from "firebase/firestore";
-import { Separator } from "@/components/ui/separator";
+import { collection, query, orderBy, doc, updateDoc, serverTimestamp, Timestamp, where, getDocs } from "firebase/firestore";
 
 type WithdrawalRequest = {
   id: string;
