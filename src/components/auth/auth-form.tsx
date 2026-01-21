@@ -53,6 +53,8 @@ export function AuthForm({ type }: AuthFormProps) {
   function onSubmit(data: AuthFormValues) {
     setIsLoading(true);
     
+    const email = data.email.trim().toLowerCase();
+
     const handleAuthSuccess = () => {
       router.replace('/dashboard');
     };
@@ -90,11 +92,11 @@ export function AuthForm({ type }: AuthFormProps) {
     }
 
     if (type === "login") {
-        signInWithEmailAndPassword(auth, data.email, data.password)
+        signInWithEmailAndPassword(auth, email, data.password)
             .then(handleAuthSuccess)
             .catch(handleAuthError);
     } else {
-        createUserWithEmailAndPassword(auth, data.email, data.password)
+        createUserWithEmailAndPassword(auth, email, data.password)
             .then(async (userCredential) => {
               if (!firestore) return;
               const user = userCredential.user;
