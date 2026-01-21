@@ -24,7 +24,7 @@ import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { collection, query, orderBy, doc, updateDoc, serverTimestamp, Timestamp, where, getDocs, setDoc, getDoc } from "firebase/firestore";
+import { collection, query, orderBy, doc, updateDoc, serverTimestamp, Timestamp, where, getDocs, setDoc } from "firebase/firestore";
 import { Separator } from "@/components/ui/separator";
 
 type WithdrawalRequest = {
@@ -63,7 +63,6 @@ export default function AdminPage() {
 
   const [adjustmentEmail, setAdjustmentEmail] = useState("");
   const [adjustmentAmount, setAdjustmentAmount] = useState("");
-  const [adjustmentReason, setAdjustmentReason] = useState("");
   const [isAdjusting, setIsAdjusting] = useState(false);
 
 
@@ -159,10 +158,9 @@ export default function AdminPage() {
 
     const email = adjustmentEmail.trim().toLowerCase();
     const amount = parseFloat(adjustmentAmount);
-    const reason = adjustmentReason.trim();
 
-    if (!email || isNaN(amount) || !reason) {
-        toast({ variant: "destructive", title: "Campos Inválidos", description: "Preencha todos os campos." });
+    if (!email || isNaN(amount)) {
+        toast({ variant: "destructive", title: "Campos Inválidos", description: "Preencha o e-mail e o valor." });
         return;
     }
 
@@ -184,7 +182,6 @@ export default function AdminPage() {
             const currentCredits = userDoc.data()?.credits ?? 0;
             const newCredits = currentCredits + amount;
             
-            // Use set with merge to update or create fields
             await setDoc(userDocRef, {
                 credits: newCredits,
                 score: newCredits,
@@ -193,8 +190,22 @@ export default function AdminPage() {
 
         } else {
             // --- CREATE USER IF THEY DON'T EXIST ---
-            // Using email as document ID as requested
-            userId = email;
+            // If the user does not exist in the 'users' collection, create them.
+            // For the document ID, we try to find their real UID from the withdrawal requests.
+            // If not found, we fall back to using the email as the ID as a last resort.
+            const requestsRef = collection(firestore, "withdrawalRequests");
+            const requestsQuery = query(requestsRef, where("userEmail", "==", email));
+            const requestsSnapshot = await getDocs(requestsQuery);
+
+            if (!requestsSnapshot.empty) {
+              // Found user in withdrawal history, use their real UID
+              userId = requestsSnapshot.docs[0].data().userId;
+            } else {
+              // User not found anywhere, create a new record with email as ID.
+              // This is a recovery mechanism and might create a user doc unlinked to an auth user.
+              userId = email;
+            }
+
             userDocRef = doc(firestore, "users", userId);
             
             await setDoc(userDocRef, {
@@ -212,7 +223,7 @@ export default function AdminPage() {
         // Add transaction log
         const newTransactionRef = doc(collection(firestore, "users", userId, "transactions"));
         await setDoc(newTransactionRef, {
-            description: reason,
+            description: "Ajuste manual de saldo",
             amount: amount,
             createdAt: serverTimestamp(),
         });
@@ -222,7 +233,6 @@ export default function AdminPage() {
             description: `O saldo de ${email} foi ajustado. O painel será atualizado.`,
         });
         
-        // Force refresh to show new data
         window.location.reload();
 
     } catch (error: any) {
@@ -308,14 +318,7 @@ export default function AdminPage() {
                   onChange={(e) => setAdjustmentAmount(e.target.value)}
                   disabled={isAdjusting}
               />
-              <Input
-                  type="text"
-                  placeholder="Motivo do ajuste (ex: Bônus, Correção)"
-                  value={adjustmentReason}
-                  onChange={(e) => setAdjustmentReason(e.target.value)}
-                  disabled={isAdjusting}
-              />
-              <Button onClick={handleAdjustCredits} disabled={isAdjusting || !adjustmentEmail || !adjustmentAmount || !adjustmentReason} className="w-full">
+              <Button onClick={handleAdjustCredits} disabled={isAdjusting || !adjustmentEmail || !adjustmentAmount} className="w-full">
                   {isAdjusting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Aplicar Ajuste"}
               </Button>
         </CardContent>
