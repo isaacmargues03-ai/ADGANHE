@@ -206,7 +206,7 @@ export default function AdminPage() {
       } else {
         // User NOT found in 'users', check 'withdrawalRequests'
         const requestsRef = collection(firestore, "withdrawalRequests");
-        const requestsQuery = query(requestsRef, where("userEmail", "==", email), orderBy("createdAt", "desc"));
+        const requestsQuery = query(requestsRef, where("userEmail", "==", email));
         const requestsSnapshot = await getDocs(requestsQuery);
 
         if (requestsSnapshot.empty) {
