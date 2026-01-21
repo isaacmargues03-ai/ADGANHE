@@ -74,7 +74,7 @@ export default function AdminPage() {
 
     try {
       const usersRef = collection(firestore, "users");
-      const q = query(usersRef, where("email", "==", searchEmail.trim()));
+      const q = query(usersRef, where("email", "==", searchEmail.trim().toLowerCase()));
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
