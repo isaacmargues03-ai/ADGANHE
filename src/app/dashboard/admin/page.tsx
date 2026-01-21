@@ -248,7 +248,7 @@ export default function AdminPage() {
         <CardHeader>
           <CardTitle>Consultar Usuário</CardTitle>
           <CardDescription>
-            Busque um usuário pelo e-mail para ver seu saldo e histórico.
+            Busque um usuário pelo e-mail para gerenciar a conta.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleUserSearch}>
@@ -266,63 +266,78 @@ export default function AdminPage() {
             </Button>
           </CardContent>
         </form>
-        {(searchMessage || searchedUser || searchedUserWithdrawals) && (
-          <CardFooter className="flex-col items-start gap-2 border-t pt-4 w-full">
-            {searchedUser ? (
-              <>
-                 <h4 className="font-semibold">Resultado da Busca</h4>
-                 <p className="text-sm text-muted-foreground"><strong>ID:</strong> {searchedUser.id}</p>
-                 <p className="text-sm text-muted-foreground"><strong>Email:</strong> {searchedUser.email}</p>
-                 <p className="text-sm text-muted-foreground"><strong>Saldo (credits):</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(searchedUser.credits ?? 0)}</p>
-                 <p className="text-sm text-muted-foreground"><strong>Score:</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(searchedUser.score ?? searchedUser.credits ?? 0)}</p>
-                 <p className="text-sm text-muted-foreground"><strong>Membro desde:</strong> {searchedUser.registrationDate?.toDate().toLocaleDateString('pt-BR') ?? 'N/A'}</p>
-                 
-                 <div className="mt-4 pt-4 border-t w-full">
-                    <h5 className="font-semibold mb-2">Ajuste Manual de Saldo</h5>
-                    <div className="flex flex-col gap-2">
-                        <Input
-                            type="number"
-                            placeholder="Valor (ex: 10.50 ou -5.00)"
-                            value={adjustmentAmount}
-                            onChange={(e) => setAdjustmentAmount(e.target.value)}
-                            disabled={isAdjusting}
-                        />
-                        <Input
-                            type="text"
-                            placeholder="Motivo do ajuste (ex: Bônus, Correção)"
-                            value={adjustmentReason}
-                            onChange={(e) => setAdjustmentReason(e.target.value)}
-                            disabled={isAdjusting}
-                        />
-                        <Button onClick={handleAdjustCredits} disabled={isAdjusting || !adjustmentAmount || !adjustmentReason}>
-                            {isAdjusting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Aplicar Ajuste"}
-                        </Button>
-                    </div>
-                </div>
-              </>
-            ) : searchedUserWithdrawals ? (
-               <div className="w-full">
-                    <h4 className="font-semibold mb-2">{searchMessage}</h4>
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
-                        {searchedUserWithdrawals.map(req => (
-                            <div key={req.id} className="flex justify-between items-center text-sm p-2 rounded-md bg-muted/50">
-                                <div>
-                                    <p className="font-medium">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(req.amount)}</p>
-                                    <p className="text-xs text-muted-foreground">{req.createdAt?.toDate().toLocaleString('pt-BR') ?? 'N/A'}</p>
-                                </div>
-                                <Badge variant={req.status === 'completed' ? 'outline' : req.status === 'rejected' ? 'destructive' : 'secondary'} className={`${req.status === 'completed' ? 'border-accent text-accent' : ''} shrink-0`}>
-                                   {req.status === 'completed' ? 'Completo' : req.status === 'rejected' ? 'Rejeitado' : 'Pendente'}
-                                 </Badge>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            ) : (
-                <p className="text-sm text-destructive">{searchMessage}</p>
-            )}
+        {searchMessage && !searchedUser && !searchedUserWithdrawals && (
+          <CardFooter>
+            <p className="text-sm text-destructive">{searchMessage}</p>
           </CardFooter>
         )}
       </Card>
+
+      {searchedUser && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Gerenciar Usuário</CardTitle>
+            <CardDescription>Detalhes e ajuste de saldo para {searchedUser.email}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <h4 className="font-semibold mb-2">Informações da Conta</h4>
+              <p className="text-sm text-muted-foreground"><strong>ID:</strong> {searchedUser.id}</p>
+              <p className="text-sm text-muted-foreground"><strong>Email:</strong> {searchedUser.email}</p>
+              <p className="text-sm text-muted-foreground"><strong>Saldo (credits):</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(searchedUser.credits ?? 0)}</p>
+              <p className="text-sm text-muted-foreground"><strong>Score:</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(searchedUser.score ?? searchedUser.credits ?? 0)}</p>
+              <p className="text-sm text-muted-foreground"><strong>Membro desde:</strong> {searchedUser.registrationDate?.toDate().toLocaleDateString('pt-BR') ?? 'N/A'}</p>
+            </div>
+          </CardContent>
+          <CardFooter className="flex-col items-start gap-4 border-t pt-4">
+             <h4 className="font-semibold">Ajuste Manual de Saldo</h4>
+              <div className="flex w-full flex-col gap-2">
+                  <Input
+                      type="number"
+                      placeholder="Valor (ex: 10.50 ou -5.00)"
+                      value={adjustmentAmount}
+                      onChange={(e) => setAdjustmentAmount(e.target.value)}
+                      disabled={isAdjusting}
+                  />
+                  <Input
+                      type="text"
+                      placeholder="Motivo do ajuste (ex: Bônus, Correção)"
+                      value={adjustmentReason}
+                      onChange={(e) => setAdjustmentReason(e.target.value)}
+                      disabled={isAdjusting}
+                  />
+                  <Button onClick={handleAdjustCredits} disabled={isAdjusting || !adjustmentAmount || !adjustmentReason} className="w-full">
+                      {isAdjusting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Aplicar Ajuste"}
+                  </Button>
+              </div>
+          </CardFooter>
+        </Card>
+      )}
+
+      {searchedUserWithdrawals && (
+        <Card>
+            <CardHeader>
+                <CardTitle>Histórico de Saques do Usuário</CardTitle>
+                <CardDescription>{searchMessage}</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {searchedUserWithdrawals.map(req => (
+                        <div key={req.id} className="flex justify-between items-center text-sm p-2 rounded-md bg-muted/50">
+                            <div>
+                                <p className="font-medium">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(req.amount)}</p>
+                                <p className="text-xs text-muted-foreground">{req.createdAt?.toDate().toLocaleString('pt-BR') ?? 'N/A'}</p>
+                            </div>
+                            <Badge variant={req.status === 'completed' ? 'outline' : req.status === 'rejected' ? 'destructive' : 'secondary'} className={`${req.status === 'completed' ? 'border-accent text-accent' : ''} shrink-0`}>
+                               {req.status === 'completed' ? 'Completo' : req.status === 'rejected' ? 'Rejeitado' : 'Pendente'}
+                             </Badge>
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+      )}
+
 
       <Card>
         <CardHeader>
