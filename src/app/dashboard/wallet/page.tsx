@@ -82,7 +82,8 @@ export default function WalletPage() {
       // 2. Atomically decrement the user's credits
       const userDocRef = doc(firestore, 'users', user.uid);
       await updateDoc(userDocRef, {
-        credits: increment(-withdrawAmount)
+        credits: increment(-withdrawAmount),
+        score: increment(-withdrawAmount)
       });
       
       // 3. Add a transaction record

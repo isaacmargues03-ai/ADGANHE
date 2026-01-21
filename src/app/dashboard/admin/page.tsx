@@ -41,6 +41,7 @@ type SearchedUser = {
     id: string;
     email: string;
     credits: number;
+    score?: number;
     registrationDate?: Timestamp;
 }
 
@@ -182,7 +183,10 @@ export default function AdminPage() {
     try {
       // Use a transaction for atomic update
       await runTransaction(firestore, async (transaction) => {
-        transaction.update(userDocRef, { credits: increment(amount) });
+        transaction.update(userDocRef, { 
+            credits: increment(amount),
+            score: increment(amount) 
+        });
         
         const newTransactionRef = doc(transactionsColRef);
         transaction.set(newTransactionRef, {
@@ -269,7 +273,8 @@ export default function AdminPage() {
                  <h4 className="font-semibold">Resultado da Busca</h4>
                  <p className="text-sm text-muted-foreground"><strong>ID:</strong> {searchedUser.id}</p>
                  <p className="text-sm text-muted-foreground"><strong>Email:</strong> {searchedUser.email}</p>
-                 <p className="text-sm text-muted-foreground"><strong>Saldo:</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(searchedUser.credits ?? 0)}</p>
+                 <p className="text-sm text-muted-foreground"><strong>Saldo (credits):</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(searchedUser.credits ?? 0)}</p>
+                 <p className="text-sm text-muted-foreground"><strong>Score:</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(searchedUser.score ?? searchedUser.credits ?? 0)}</p>
                  <p className="text-sm text-muted-foreground"><strong>Membro desde:</strong> {searchedUser.registrationDate?.toDate().toLocaleDateString('pt-BR') ?? 'N/A'}</p>
                  
                  <div className="mt-4 pt-4 border-t w-full">

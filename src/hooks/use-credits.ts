@@ -19,7 +19,8 @@ export function useCredits() {
       if (!userDocRef) return;
       // Use increment for atomic updates, which is safer for currency.
       updateDoc(userDocRef, {
-          credits: increment(amount)
+          credits: increment(amount),
+          score: increment(amount)
       });
   }, [userDocRef]);
 

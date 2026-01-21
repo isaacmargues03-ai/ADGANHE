@@ -20,8 +20,12 @@
           "format": "email"
         },
         "credits": {
-            "type": "number",
-            "description": "The user's available credits in BRL."
+          "type": "number",
+          "description": "The user's available credits in BRL. Represents 'saldo'."
+        },
+        "score": {
+          "type": "number",
+          "description": "Legacy field for user's score, kept in sync with credits."
         },
         "registrationDate": {
           "type": "string",
@@ -39,7 +43,8 @@
         "username",
         "email",
         "registrationDate",
-        "credits"
+        "credits",
+        "score"
       ]
     },
     "Transaction": {
