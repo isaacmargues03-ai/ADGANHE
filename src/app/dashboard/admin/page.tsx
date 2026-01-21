@@ -24,7 +24,7 @@ import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { collection, query, orderBy, doc, updateDoc, serverTimestamp, Timestamp, where, getDocs, setDoc } from "firebase/firestore";
+import { collection, query, orderBy, doc, updateDoc, serverTimestamp, Timestamp, where, getDocs, setDoc, increment } from "firebase/firestore";
 import { Separator } from "@/components/ui/separator";
 
 type WithdrawalRequest = {
@@ -171,7 +171,7 @@ export default function AdminPage() {
         const userQuery = query(usersRef, where("email", "==", email));
         const userSnapshot = await getDocs(userQuery);
 
-        let userId;
+        let userId: string;
         let userDocRef;
 
         if (!userSnapshot.empty) {
@@ -179,35 +179,33 @@ export default function AdminPage() {
             const userDoc = userSnapshot.docs[0];
             userId = userDoc.id;
             userDocRef = userDoc.ref;
-            const currentCredits = userDoc.data()?.credits ?? 0;
-            const newCredits = currentCredits + amount;
             
-            await setDoc(userDocRef, {
-                credits: newCredits,
-                score: newCredits,
-                saldo: newCredits
-            }, { merge: true });
-
+            // Use Firestore's atomic increment to safely update the balance
+            const newAmount = increment(amount);
+            await updateDoc(userDocRef, {
+                credits: newAmount,
+                score: newAmount,
+                saldo: newAmount
+            });
         } else {
             // --- CREATE USER IF THEY DON'T EXIST ---
-            // If the user does not exist in the 'users' collection, create them.
-            // For the document ID, we try to find their real UID from the withdrawal requests.
-            // If not found, we fall back to using the email as the ID as a last resort.
+            // First, check withdrawalRequests to find the user's original UID
             const requestsRef = collection(firestore, "withdrawalRequests");
             const requestsQuery = query(requestsRef, where("userEmail", "==", email));
             const requestsSnapshot = await getDocs(requestsQuery);
 
             if (!requestsSnapshot.empty) {
-              // Found user in withdrawal history, use their real UID
+              // Found user in withdrawal history, use their real UID to create the doc
               userId = requestsSnapshot.docs[0].data().userId;
+              userDocRef = doc(firestore, "users", userId);
             } else {
-              // User not found anywhere, create a new record with email as ID.
-              // This is a recovery mechanism and might create a user doc unlinked to an auth user.
-              userId = email;
+              // User not found anywhere. Create a new document with an auto-generated ID.
+              const newUserDoc = doc(usersRef);
+              userId = newUserDoc.id;
+              userDocRef = newUserDoc;
             }
 
-            userDocRef = doc(firestore, "users", userId);
-            
+            // Create the user document with the initial balance and info
             await setDoc(userDocRef, {
                 id: userId,
                 email: email,
@@ -217,10 +215,10 @@ export default function AdminPage() {
                 saldo: amount,
                 registrationDate: serverTimestamp(),
                 lastLogin: serverTimestamp(),
-            }, { merge: true });
+            }, { merge: true }); // Use merge:true to be safe
         }
 
-        // Add transaction log
+        // Add a transaction log for the adjustment
         const newTransactionRef = doc(collection(firestore, "users", userId, "transactions"));
         await setDoc(newTransactionRef, {
             description: "Ajuste manual de saldo",
