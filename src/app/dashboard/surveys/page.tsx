@@ -8,7 +8,7 @@ export default function SurveysPage() {
 
   // Construct the URL with the user's ID and username
   const cpxUrl = user
-    ? `https://offers.cpx-research.com/index.php?app_id=8d9e64a6d12dd6140d01142b9488aef9&ext_user_id=${user.uid}&username=${user.displayName || user.email?.split('@')[0]}`
+    ? `https://offers.cpx-research.com/index.php?app_id=31040&ext_user_id=${user.uid}&username=${user.displayName || user.email?.split('@')[0]}`
     : '';
 
   if (isUserLoading || !user) {
