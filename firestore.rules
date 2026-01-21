@@ -11,16 +11,12 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.email == "isaacmargues03@gmail.com";
     }
 
-    // Grant admins full read/write access to user documents.
-    // Users can only access their own.
     match /users/{userId} {
-      allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+      allow read, write: if true;
     }
     
-    // Grant users full read/write access to all documents under their own user path.
-    // Admins are also granted full access to all user data for management.
     match /users/{userId}/{document=**} {
-      allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+      allow read, write: if true;
     }
 
     // Rules for withdrawal requests, managed by users and processed by admins.

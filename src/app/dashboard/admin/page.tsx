@@ -184,6 +184,7 @@ export default function AdminPage() {
             const currentCredits = userDoc.data()?.credits ?? 0;
             const newCredits = currentCredits + amount;
             
+            // Use set with merge to update or create fields
             await setDoc(userDocRef, {
                 credits: newCredits,
                 score: newCredits,
@@ -191,25 +192,15 @@ export default function AdminPage() {
             }, { merge: true });
 
         } else {
-            // --- CREATE USER (if they don't exist) ---
-            console.warn(`User with email ${email} not found. Trying to find in withdrawals or creating a new one.`);
-            const requestsRef = collection(firestore, "withdrawalRequests");
-            const requestsQuery = query(requestsRef, where("userEmail", "==", email));
-            const requestsSnapshot = await getDocs(requestsQuery);
-
-            if (!requestsSnapshot.empty && requestsSnapshot.docs[0].data().userId) {
-                userId = requestsSnapshot.docs[0].data().userId;
-                userDocRef = doc(firestore, "users", userId);
-            } else {
-                // Create a new document with an auto-generated ID, as using email is not safe.
-                userDocRef = doc(collection(firestore, "users"));
-                userId = userDocRef.id;
-            }
+            // --- CREATE USER IF THEY DON'T EXIST ---
+            // Using email as document ID as requested
+            userId = email;
+            userDocRef = doc(firestore, "users", userId);
             
             await setDoc(userDocRef, {
                 id: userId,
                 email: email,
-                username: email.split('@')[0] ?? `user_${userId.substring(0,5)}`,
+                username: email.split('@')[0] ?? `user_${new Date().getTime()}`,
                 credits: amount,
                 score: amount,
                 saldo: amount,
@@ -228,19 +219,11 @@ export default function AdminPage() {
 
         toast({
             title: "Saldo Aplicado com Sucesso!",
-            description: `O saldo de ${email} foi ajustado.`,
+            description: `O saldo de ${email} foi ajustado. O painel será atualizado.`,
         });
         
-        if (searchedUser && searchedUser.email === email) {
-            const updatedUserDoc = await getDoc(userDocRef);
-            if (updatedUserDoc.exists()) {
-                setSearchedUser({ id: updatedUserDoc.id, ...updatedUserDoc.data() } as SearchedUser);
-            }
-        }
-
-        setAdjustmentEmail("");
-        setAdjustmentAmount("");
-        setAdjustmentReason("");
+        // Force refresh to show new data
+        window.location.reload();
 
     } catch (error: any) {
         console.error("Erro detalhado ao ajustar saldo:", error);
@@ -249,10 +232,9 @@ export default function AdminPage() {
             title: "Erro ao Ajustar Saldo",
             description: error.message || "Não foi possível completar a operação. Verifique o console.",
         });
-    } finally {
         setIsAdjusting(false);
     }
-};
+  };
 
 
   const pendingRequests = requests?.filter(req => req.status === 'pending') ?? [];
