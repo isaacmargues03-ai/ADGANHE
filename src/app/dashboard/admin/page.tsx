@@ -164,7 +164,7 @@ export default function AdminPage() {
       toast({ variant: "destructive", title: "E-mail Inválido", description: "Por favor, insira um e-mail." });
       return;
     }
-    if (isNaN(amount) || amount === 0) {
+    if (isNaN(amount)) {
       toast({ variant: "destructive", title: "Valor Inválido", description: "Por favor, insira um valor numérico válido." });
       return;
     }
@@ -180,35 +180,79 @@ export default function AdminPage() {
       const userQuery = query(usersRef, where("email", "==", email));
       const userSnapshot = await getDocs(userQuery);
 
-      if (userSnapshot.empty) {
-        toast({ variant: "destructive", title: "Usuário não encontrado", description: `Nenhum usuário encontrado com o e-mail ${email}.` });
-        setIsAdjusting(false);
-        return;
+      let userDocRef;
+      let userId;
+
+      if (!userSnapshot.empty) {
+        // User found in 'users' collection
+        const userDoc = userSnapshot.docs[0];
+        userId = userDoc.id;
+        userDocRef = doc(firestore, "users", userId);
+
+        // Run transaction to update existing user
+        await runTransaction(firestore, async (transaction) => {
+            transaction.update(userDocRef, {
+                credits: increment(amount),
+                score: increment(amount)
+            });
+            const newTransactionRef = doc(collection(firestore, "users", userId, "transactions"));
+            transaction.set(newTransactionRef, {
+                description: reason,
+                amount: amount,
+                createdAt: serverTimestamp(),
+            });
+        });
+
+      } else {
+        // User NOT found in 'users', check 'withdrawalRequests'
+        const requestsRef = collection(firestore, "withdrawalRequests");
+        const requestsQuery = query(requestsRef, where("userEmail", "==", email), orderBy("createdAt", "desc"));
+        const requestsSnapshot = await getDocs(requestsQuery);
+
+        if (requestsSnapshot.empty) {
+            // User not found anywhere, show error
+            toast({ variant: "destructive", title: "Usuário não encontrado", description: `Nenhum usuário encontrado com o e-mail ${email} na base de dados.` });
+            setIsAdjusting(false);
+            return;
+        }
+
+        // User found in withdrawal requests, create a new document in 'users'
+        userId = requestsSnapshot.docs[0].data().userId;
+        if (!userId) {
+             toast({ variant: "destructive", title: "Erro de Dados", description: `Histórico de saque encontrado para ${email}, mas não contém um ID de usuário.` });
+             setIsAdjusting(false);
+             return;
+        }
+        
+        userDocRef = doc(firestore, "users", userId);
+        
+        // Run transaction to create new user and add transaction
+        await runTransaction(firestore, async (transaction) => {
+            transaction.set(userDocRef, {
+                id: userId,
+                email: email,
+                credits: amount, // Set initial credits to the adjustment amount
+                score: amount,   // Set initial score to the adjustment amount
+                registrationDate: serverTimestamp(),
+                lastLogin: serverTimestamp(),
+                username: email.split('@')[0] ?? `user_${userId.substring(0,5)}`,
+            });
+            const newTransactionRef = doc(collection(firestore, "users", userId, "transactions"));
+            transaction.set(newTransactionRef, {
+                description: reason,
+                amount: amount,
+                createdAt: serverTimestamp(),
+            });
+        });
       }
-
-      const userDoc = userSnapshot.docs[0];
-      const userDocRef = doc(firestore, "users", userDoc.id);
-      const transactionsColRef = collection(firestore, "users", userDoc.id, "transactions");
-
-      await runTransaction(firestore, async (transaction) => {
-        transaction.update(userDocRef, {
-          credits: increment(amount),
-          score: increment(amount)
-        });
-        const newTransactionRef = doc(transactionsColRef);
-        transaction.set(newTransactionRef, {
-          description: reason,
-          amount: amount,
-          createdAt: serverTimestamp(),
-        });
-      });
 
       toast({
         title: "Saldo Ajustado!",
         description: `O saldo de ${email} foi ajustado em ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount)}.`,
       });
 
-      if (searchedUser && searchedUser.id === userDoc.id) {
+      // Refresh searched user data if they are being displayed
+      if (searchedUser && searchedUser.id === userId) {
         const updatedUserDoc = await getDoc(userDocRef);
         if (updatedUserDoc.exists()) {
           setSearchedUser({ id: updatedUserDoc.id, ...updatedUserDoc.data() } as SearchedUser);
@@ -218,12 +262,13 @@ export default function AdminPage() {
       setAdjustmentEmail("");
       setAdjustmentAmount("");
       setAdjustmentReason("");
-    } catch (error) {
-      console.error("Erro ao ajustar saldo:", error);
+
+    } catch (error: any) {
+      console.error("Erro detalhado ao ajustar saldo:", error);
       toast({
         variant: "destructive",
         title: "Erro ao Ajustar Saldo",
-        description: "Não foi possível completar a operação. Tente novamente.",
+        description: error.message || "Não foi possível completar a operação. Verifique o console para detalhes.",
       });
     } finally {
       setIsAdjusting(false);
