@@ -54,6 +54,7 @@ export default function AdminPage() {
 
   const [searchEmail, setSearchEmail] = useState("");
   const [searchedUser, setSearchedUser] = useState<SearchedUser | null>(null);
+  const [searchedUserWithdrawals, setSearchedUserWithdrawals] = useState<WithdrawalRequest[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchMessage, setSearchMessage] = useState<string | null>(null);
 
@@ -70,18 +71,32 @@ export default function AdminPage() {
 
     setIsSearching(true);
     setSearchedUser(null);
+    setSearchedUserWithdrawals(null);
     setSearchMessage(null);
+
+    const emailToSearch = searchEmail.trim().toLowerCase();
 
     try {
       const usersRef = collection(firestore, "users");
-      const q = query(usersRef, where("email", "==", searchEmail.trim().toLowerCase()));
-      const querySnapshot = await getDocs(q);
+      const userQuery = query(usersRef, where("email", "==", emailToSearch));
+      const userSnapshot = await getDocs(userQuery);
 
-      if (querySnapshot.empty) {
-        setSearchMessage("Nenhum usuário encontrado com este e-mail.");
-      } else {
-        const userDoc = querySnapshot.docs[0];
+      if (!userSnapshot.empty) {
+        const userDoc = userSnapshot.docs[0];
         setSearchedUser({ id: userDoc.id, ...userDoc.data() } as SearchedUser);
+      } else {
+        const requestsRef = collection(firestore, "withdrawalRequests");
+        const requestsQuery = query(requestsRef, where("userEmail", "==", emailToSearch));
+        const requestsSnapshot = await getDocs(requestsQuery);
+
+        if (requestsSnapshot.empty) {
+          setSearchMessage("Nenhum usuário ou histórico de saques encontrado para este e-mail.");
+        } else {
+          const withdrawals = requestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WithdrawalRequest));
+          withdrawals.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+          setSearchedUserWithdrawals(withdrawals);
+          setSearchMessage(`Usuário não encontrado na base de dados principal. Exibindo histórico de saques para ${emailToSearch}:`);
+        }
       }
     } catch (error) {
       console.error("Erro ao buscar usuário:", error);
@@ -157,7 +172,7 @@ export default function AdminPage() {
         <CardHeader>
           <CardTitle>Consultar Usuário</CardTitle>
           <CardDescription>
-            Busque um usuário pelo e-mail para ver seu saldo.
+            Busque um usuário pelo e-mail para ver seu saldo e histórico.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleUserSearch}>
@@ -175,19 +190,37 @@ export default function AdminPage() {
             </Button>
           </CardContent>
         </form>
-        {searchedUser && (
-          <CardFooter className="flex-col items-start gap-1 border-t pt-4">
-             <h4 className="font-semibold">Resultado da Busca</h4>
-             <p className="text-sm text-muted-foreground"><strong>ID:</strong> {searchedUser.id}</p>
-             <p className="text-sm text-muted-foreground"><strong>Email:</strong> {searchedUser.email}</p>
-             <p className="text-sm text-muted-foreground"><strong>Saldo:</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(searchedUser.credits ?? 0)}</p>
-             <p className="text-sm text-muted-foreground"><strong>Membro desde:</strong> {searchedUser.registrationDate?.toDate().toLocaleDateString('pt-BR') ?? 'N/A'}</p>
-          </CardFooter>
-        )}
-        {searchMessage && !searchedUser && (
-            <CardFooter className="border-t pt-4">
+        {(searchMessage || searchedUser || searchedUserWithdrawals) && (
+          <CardFooter className="flex-col items-start gap-2 border-t pt-4 w-full">
+            {searchedUser ? (
+              <>
+                 <h4 className="font-semibold">Resultado da Busca</h4>
+                 <p className="text-sm text-muted-foreground"><strong>ID:</strong> {searchedUser.id}</p>
+                 <p className="text-sm text-muted-foreground"><strong>Email:</strong> {searchedUser.email}</p>
+                 <p className="text-sm text-muted-foreground"><strong>Saldo:</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(searchedUser.credits ?? 0)}</p>
+                 <p className="text-sm text-muted-foreground"><strong>Membro desde:</strong> {searchedUser.registrationDate?.toDate().toLocaleDateString('pt-BR') ?? 'N/A'}</p>
+              </>
+            ) : searchedUserWithdrawals ? (
+               <div className="w-full">
+                    <h4 className="font-semibold mb-2">{searchMessage}</h4>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {searchedUserWithdrawals.map(req => (
+                            <div key={req.id} className="flex justify-between items-center text-sm p-2 rounded-md bg-muted/50">
+                                <div>
+                                    <p className="font-medium">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(req.amount)}</p>
+                                    <p className="text-xs text-muted-foreground">{req.createdAt?.toDate().toLocaleString('pt-BR') ?? 'N/A'}</p>
+                                </div>
+                                <Badge variant={req.status === 'completed' ? 'outline' : req.status === 'rejected' ? 'destructive' : 'secondary'} className={`${req.status === 'completed' ? 'border-accent text-accent' : ''} shrink-0`}>
+                                   {req.status === 'completed' ? 'Completo' : req.status === 'rejected' ? 'Rejeitado' : 'Pendente'}
+                                 </Badge>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : (
                 <p className="text-sm text-destructive">{searchMessage}</p>
-            </CardFooter>
+            )}
+          </CardFooter>
         )}
       </Card>
 
