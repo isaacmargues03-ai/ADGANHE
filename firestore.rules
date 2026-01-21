@@ -12,7 +12,7 @@ service cloud.firestore {
     }
 
     // Grant users full read/write access to all documents under their own user path.
-    // Admins are also granted full access to all user data.
+    // Admins are also granted full access to all user data for management.
     match /users/{userId}/{document=**} {
       allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
     }
@@ -25,11 +25,15 @@ service cloud.firestore {
             || (resource != null && request.auth.uid == resource.data.userId);
       }
       
+      // Admins have full read/write permissions to manage all requests.
+      allow read, write: if isAdmin();
+      
+      // Users can create and read their own requests.
       allow create: if isRequestOwner();
-      allow list: if isAdmin();
-      allow get: if isAdmin() || isRequestOwner();
-      allow update: if isAdmin();
-      allow delete: if false;
+      allow get: if isRequestOwner();
+      
+      // Users cannot list all requests, update, or delete them.
+      allow list, update, delete: if false;
     }
   }
 }
