@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -20,10 +21,10 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { collection, query, orderBy, doc, updateDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { collection, query, orderBy, doc, updateDoc, serverTimestamp, Timestamp, where, getDocs } from "firebase/firestore";
 
 type WithdrawalRequest = {
   id: string;
@@ -36,6 +37,13 @@ type WithdrawalRequest = {
   status: 'pending' | 'completed' | 'rejected';
 };
 
+type SearchedUser = {
+    id: string;
+    email: string;
+    credits: number;
+    registrationDate?: Timestamp;
+}
+
 const ADMIN_EMAIL = "isaacmargues03@gmail.com";
 
 export default function AdminPage() {
@@ -44,11 +52,45 @@ export default function AdminPage() {
   const router = useRouter();
   const firestore = useFirestore();
 
+  const [searchEmail, setSearchEmail] = useState("");
+  const [searchedUser, setSearchedUser] = useState<SearchedUser | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchMessage, setSearchMessage] = useState<string | null>(null);
+
+
   useEffect(() => {
     if (!isAuthLoading && (!user || user.email !== ADMIN_EMAIL)) {
       router.replace('/dashboard');
     }
   }, [user, isAuthLoading, router]);
+  
+  const handleUserSearch = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!firestore || !searchEmail) return;
+
+    setIsSearching(true);
+    setSearchedUser(null);
+    setSearchMessage(null);
+
+    try {
+      const usersRef = collection(firestore, "users");
+      const q = query(usersRef, where("email", "==", searchEmail.trim()));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        setSearchMessage("Nenhum usuário encontrado com este e-mail.");
+      } else {
+        const userDoc = querySnapshot.docs[0];
+        setSearchedUser({ id: userDoc.id, ...userDoc.data() } as SearchedUser);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar usuário:", error);
+      setSearchMessage("Ocorreu um erro ao buscar o usuário.");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
 
   const requestsQuery = useMemoFirebase(() => {
     if (!firestore || !user || user.email !== ADMIN_EMAIL) return null;
@@ -59,7 +101,6 @@ export default function AdminPage() {
 
   if (error) {
     console.error("Error fetching withdrawal requests:", error);
-    // You might want to show a toast message to the admin here
   }
 
   const handleRequest = async (id: string, action: "approve" | "reject") => {
@@ -108,9 +149,47 @@ export default function AdminPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Painel do Administrador</h1>
         <p className="text-muted-foreground">
-          Gerencie as solicitações de saque dos usuários.
+          Gerencie saques e consulte informações dos usuários.
         </p>
       </div>
+
+       <Card>
+        <CardHeader>
+          <CardTitle>Consultar Usuário</CardTitle>
+          <CardDescription>
+            Busque um usuário pelo e-mail para ver seu saldo.
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleUserSearch}>
+          <CardContent className="flex flex-col md:flex-row gap-2">
+            <Input
+              type="email"
+              placeholder="Digite o e-mail do usuário"
+              value={searchEmail}
+              onChange={(e) => setSearchEmail(e.target.value)}
+              required
+              className="w-full"
+            />
+            <Button type="submit" disabled={isSearching} className="md:w-auto w-full shrink-0">
+              {isSearching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Buscar"}
+            </Button>
+          </CardContent>
+        </form>
+        {searchedUser && (
+          <CardFooter className="flex-col items-start gap-1 border-t pt-4">
+             <h4 className="font-semibold">Resultado da Busca</h4>
+             <p className="text-sm text-muted-foreground"><strong>ID:</strong> {searchedUser.id}</p>
+             <p className="text-sm text-muted-foreground"><strong>Email:</strong> {searchedUser.email}</p>
+             <p className="text-sm text-muted-foreground"><strong>Saldo:</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(searchedUser.credits ?? 0)}</p>
+             <p className="text-sm text-muted-foreground"><strong>Membro desde:</strong> {searchedUser.registrationDate?.toDate().toLocaleDateString('pt-BR') ?? 'N/A'}</p>
+          </CardFooter>
+        )}
+        {searchMessage && !searchedUser && (
+            <CardFooter className="border-t pt-4">
+                <p className="text-sm text-destructive">{searchMessage}</p>
+            </CardFooter>
+        )}
+      </Card>
 
       <Card>
         <CardHeader>
