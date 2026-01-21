@@ -61,11 +61,6 @@ export default function AdminPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchMessage, setSearchMessage] = useState<string | null>(null);
 
-  const [adjustmentEmail, setAdjustmentEmail] = useState("");
-  const [adjustmentAmount, setAdjustmentAmount] = useState("");
-  const [isAdjusting, setIsAdjusting] = useState(false);
-
-
   useEffect(() => {
     if (!isAuthLoading && (!user || user.email !== ADMIN_EMAIL)) {
       router.replace('/dashboard');
@@ -153,98 +148,6 @@ export default function AdminPage() {
     }
   };
 
-  const handleAdjustCredits = async () => {
-    if (!firestore || isAdjusting) return;
-
-    const email = adjustmentEmail.trim().toLowerCase();
-    const amount = parseFloat(adjustmentAmount);
-
-    if (!email || isNaN(amount)) {
-        toast({ variant: "destructive", title: "Campos Inválidos", description: "Preencha o e-mail e o valor." });
-        return;
-    }
-
-    setIsAdjusting(true);
-
-    try {
-        const usersRef = collection(firestore, "users");
-        const userQuery = query(usersRef, where("email", "==", email));
-        const userSnapshot = await getDocs(userQuery);
-
-        let userId: string;
-        let userDocRef;
-
-        if (!userSnapshot.empty) {
-            // --- UPDATE EXISTING USER ---
-            const userDoc = userSnapshot.docs[0];
-            userId = userDoc.id;
-            userDocRef = userDoc.ref;
-            
-            // Use Firestore's atomic increment to safely update the balance
-            const newAmount = increment(amount);
-            await updateDoc(userDocRef, {
-                credits: newAmount,
-                score: newAmount,
-                saldo: newAmount
-            });
-        } else {
-            // --- CREATE USER IF THEY DON'T EXIST ---
-            // First, check withdrawalRequests to find the user's original UID
-            const requestsRef = collection(firestore, "withdrawalRequests");
-            const requestsQuery = query(requestsRef, where("userEmail", "==", email));
-            const requestsSnapshot = await getDocs(requestsQuery);
-
-            if (!requestsSnapshot.empty) {
-              // Found user in withdrawal history, use their real UID to create the doc
-              userId = requestsSnapshot.docs[0].data().userId;
-              userDocRef = doc(firestore, "users", userId);
-            } else {
-              // User not found anywhere. Create a new document with an auto-generated ID.
-              const newUserDoc = doc(usersRef);
-              userId = newUserDoc.id;
-              userDocRef = newUserDoc;
-            }
-
-            // Create the user document with the initial balance and info
-            await setDoc(userDocRef, {
-                id: userId,
-                email: email,
-                username: email.split('@')[0] ?? `user_${new Date().getTime()}`,
-                credits: amount,
-                score: amount,
-                saldo: amount,
-                registrationDate: serverTimestamp(),
-                lastLogin: serverTimestamp(),
-            }, { merge: true }); // Use merge:true to be safe
-        }
-
-        // Add a transaction log for the adjustment
-        const newTransactionRef = doc(collection(firestore, "users", userId, "transactions"));
-        await setDoc(newTransactionRef, {
-            description: "Ajuste manual de saldo",
-            amount: amount,
-            createdAt: serverTimestamp(),
-        });
-
-        toast({
-            title: "Saldo Aplicado com Sucesso!",
-            description: `O saldo de ${email} foi ajustado. O painel será atualizado.`,
-        });
-        
-        window.location.reload();
-
-    } catch (error: any) {
-        console.error("Erro detalhado ao ajustar saldo:", error);
-        toast({
-            variant: "destructive",
-            title: "Erro ao Ajustar Saldo",
-            description: error.message || "Não foi possível completar a operação. Verifique o console.",
-        });
-        setIsAdjusting(false);
-    }
-  };
-
-
   const pendingRequests = requests?.filter(req => req.status === 'pending') ?? [];
   const processedRequests = requests?.filter(req => req.status === 'completed' || req.status === 'rejected') ?? [];
   
@@ -271,7 +174,7 @@ export default function AdminPage() {
         <CardHeader>
           <CardTitle>Gerenciamento de Contas</CardTitle>
           <CardDescription>
-            Consulte ou ajuste o saldo de um usuário.
+            Consulte o saldo e o histórico de um usuário.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -295,31 +198,6 @@ export default function AdminPage() {
             <p className="text-sm text-destructive">{searchMessage}</p>
           </CardFooter>
         )}
-        
-        <Separator className="my-4" />
-
-        <CardHeader className="pt-0">
-             <h3 className="font-semibold text-base">Adicionar Saldo Manualmente</h3>
-        </CardHeader>
-        <CardContent className="flex w-full flex-col gap-2">
-              <Input
-                  type="email"
-                  placeholder="E-mail do usuário"
-                  value={adjustmentEmail}
-                  onChange={(e) => setAdjustmentEmail(e.target.value)}
-                  disabled={isAdjusting}
-              />
-              <Input
-                  type="number"
-                  placeholder="Valor (ex: 10.50 ou -5.00)"
-                  value={adjustmentAmount}
-                  onChange={(e) => setAdjustmentAmount(e.target.value)}
-                  disabled={isAdjusting}
-              />
-              <Button onClick={handleAdjustCredits} disabled={isAdjusting || !adjustmentEmail || !adjustmentAmount} className="w-full">
-                  {isAdjusting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Aplicar Ajuste"}
-              </Button>
-        </CardContent>
       </Card>
 
       {searchedUser && (
