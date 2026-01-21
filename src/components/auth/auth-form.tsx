@@ -21,7 +21,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword
 } from "firebase/auth";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, runTransaction, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
@@ -99,14 +99,30 @@ export function AuthForm({ type }: AuthFormProps) {
               if (!firestore) return;
               const user = userCredential.user;
               const userDocRef = doc(firestore, 'users', user.uid);
-              await setDoc(userDocRef, {
-                id: user.uid,
-                email: user.email,
-                credits: 0,
-                registrationDate: serverTimestamp(),
-                lastLogin: serverTimestamp(),
-                username: user.email?.split('@')[0] ?? `user_${user.uid.substring(0,5)}`,
+              
+              // Use a transaction to safely create the user document, preventing data loss.
+              await runTransaction(firestore, async (transaction) => {
+                const userDoc = await transaction.get(userDocRef);
+                if (!userDoc.exists()) {
+                  // Document doesn't exist: This is a brand new user.
+                  // Create the document with an initial credit balance of 0.
+                  transaction.set(userDocRef, {
+                    id: user.uid,
+                    email: user.email,
+                    credits: 0,
+                    registrationDate: serverTimestamp(),
+                    lastLogin: serverTimestamp(),
+                    username: user.email?.split('@')[0] ?? `user_${user.uid.substring(0,5)}`,
+                  });
+                } else {
+                  // Document already exists: This can happen in rare cases (e.g., re-creating a deleted auth account).
+                  // To be safe, we will NOT touch the credits. We'll just update the last login time.
+                  transaction.update(userDocRef, {
+                    lastLogin: serverTimestamp()
+                  });
+                }
               });
+
               handleAuthSuccess();
             })
             .catch(handleAuthError);
