@@ -24,7 +24,7 @@ import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { collection, query, orderBy, doc, updateDoc, serverTimestamp, Timestamp, where, getDocs } from "firebase/firestore";
+import { collection, query, orderBy, doc, updateDoc, serverTimestamp, Timestamp, where, getDocs, runTransaction, increment, getDoc } from "firebase/firestore";
 
 type WithdrawalRequest = {
   id: string;
@@ -58,6 +58,10 @@ export default function AdminPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchMessage, setSearchMessage] = useState<string | null>(null);
 
+  const [adjustmentAmount, setAdjustmentAmount] = useState("");
+  const [adjustmentReason, setAdjustmentReason] = useState("");
+  const [isAdjusting, setIsAdjusting] = useState(false);
+
 
   useEffect(() => {
     if (!isAuthLoading && (!user || user.email !== ADMIN_EMAIL)) {
@@ -73,6 +77,8 @@ export default function AdminPage() {
     setSearchedUser(null);
     setSearchedUserWithdrawals(null);
     setSearchMessage(null);
+    setAdjustmentAmount("");
+    setAdjustmentReason("");
 
     const emailToSearch = searchEmail.trim().toLowerCase();
 
@@ -146,6 +152,72 @@ export default function AdminPage() {
     }
   };
 
+  const handleAdjustCredits = async () => {
+    if (!firestore || !searchedUser || isAdjusting) return;
+
+    const amount = parseFloat(adjustmentAmount);
+    if (isNaN(amount) || amount === 0) {
+      toast({
+        variant: "destructive",
+        title: "Valor Inválido",
+        description: "Por favor, insira um valor numérico válido, positivo ou negativo.",
+      });
+      return;
+    }
+    
+    if (!adjustmentReason.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Motivo Inválido",
+        description: "Por favor, forneça um motivo para o ajuste.",
+      });
+      return;
+    }
+
+    setIsAdjusting(true);
+
+    const userDocRef = doc(firestore, "users", searchedUser.id);
+    const transactionsColRef = collection(firestore, "users", searchedUser.id, "transactions");
+
+    try {
+      // Use a transaction for atomic update
+      await runTransaction(firestore, async (transaction) => {
+        transaction.update(userDocRef, { credits: increment(amount) });
+        
+        const newTransactionRef = doc(transactionsColRef);
+        transaction.set(newTransactionRef, {
+            description: adjustmentReason.trim(),
+            amount: amount,
+            createdAt: serverTimestamp(),
+        });
+      });
+        
+      toast({
+        title: "Saldo Ajustado!",
+        description: `O saldo de ${searchedUser.email} foi ajustado em ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount)}.`,
+      });
+
+      // Refresh user data on screen
+      const updatedUserDoc = await getDoc(userDocRef);
+      if (updatedUserDoc.exists()) {
+        setSearchedUser({ id: updatedUserDoc.id, ...updatedUserDoc.data() } as SearchedUser);
+      }
+
+      setAdjustmentAmount("");
+      setAdjustmentReason("");
+    } catch (error) {
+      console.error("Erro ao ajustar saldo:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao Ajustar Saldo",
+        description: "Não foi possível completar a operação. Tente novamente.",
+      });
+    } finally {
+      setIsAdjusting(false);
+    }
+  };
+
+
   const pendingRequests = requests?.filter(req => req.status === 'pending') ?? [];
   const processedRequests = requests?.filter(req => req.status === 'completed' || req.status === 'rejected') ?? [];
   
@@ -199,6 +271,29 @@ export default function AdminPage() {
                  <p className="text-sm text-muted-foreground"><strong>Email:</strong> {searchedUser.email}</p>
                  <p className="text-sm text-muted-foreground"><strong>Saldo:</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(searchedUser.credits ?? 0)}</p>
                  <p className="text-sm text-muted-foreground"><strong>Membro desde:</strong> {searchedUser.registrationDate?.toDate().toLocaleDateString('pt-BR') ?? 'N/A'}</p>
+                 
+                 <div className="mt-4 pt-4 border-t w-full">
+                    <h5 className="font-semibold mb-2">Ajuste Manual de Saldo</h5>
+                    <div className="flex flex-col gap-2">
+                        <Input
+                            type="number"
+                            placeholder="Valor (ex: 10.50 ou -5.00)"
+                            value={adjustmentAmount}
+                            onChange={(e) => setAdjustmentAmount(e.target.value)}
+                            disabled={isAdjusting}
+                        />
+                        <Input
+                            type="text"
+                            placeholder="Motivo do ajuste (ex: Bônus, Correção)"
+                            value={adjustmentReason}
+                            onChange={(e) => setAdjustmentReason(e.target.value)}
+                            disabled={isAdjusting}
+                        />
+                        <Button onClick={handleAdjustCredits} disabled={isAdjusting || !adjustmentAmount || !adjustmentReason}>
+                            {isAdjusting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Aplicar Ajuste"}
+                        </Button>
+                    </div>
+                </div>
               </>
             ) : searchedUserWithdrawals ? (
                <div className="w-full">
