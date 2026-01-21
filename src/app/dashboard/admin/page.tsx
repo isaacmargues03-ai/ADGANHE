@@ -25,6 +25,7 @@ import { useState, useEffect } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { collection, query, orderBy, doc, updateDoc, serverTimestamp, Timestamp, where, getDocs, runTransaction, increment, getDoc } from "firebase/firestore";
+import { Separator } from "@/components/ui/separator";
 
 type WithdrawalRequest = {
   id: string;
@@ -59,6 +60,7 @@ export default function AdminPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchMessage, setSearchMessage] = useState<string | null>(null);
 
+  const [adjustmentEmail, setAdjustmentEmail] = useState("");
   const [adjustmentAmount, setAdjustmentAmount] = useState("");
   const [adjustmentReason, setAdjustmentReason] = useState("");
   const [isAdjusting, setIsAdjusting] = useState(false);
@@ -78,8 +80,6 @@ export default function AdminPage() {
     setSearchedUser(null);
     setSearchedUserWithdrawals(null);
     setSearchMessage(null);
-    setAdjustmentAmount("");
-    setAdjustmentReason("");
 
     const emailToSearch = searchEmail.trim().toLowerCase();
 
@@ -154,59 +154,68 @@ export default function AdminPage() {
   };
 
   const handleAdjustCredits = async () => {
-    if (!firestore || !searchedUser || isAdjusting) return;
+    if (!firestore || isAdjusting) return;
 
+    const email = adjustmentEmail.trim().toLowerCase();
     const amount = parseFloat(adjustmentAmount);
-    if (isNaN(amount) || amount === 0) {
-      toast({
-        variant: "destructive",
-        title: "Valor Inválido",
-        description: "Por favor, insira um valor numérico válido, positivo ou negativo.",
-      });
+    const reason = adjustmentReason.trim();
+
+    if (!email) {
+      toast({ variant: "destructive", title: "E-mail Inválido", description: "Por favor, insira um e-mail." });
       return;
     }
-    
-    if (!adjustmentReason.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Motivo Inválido",
-        description: "Por favor, forneça um motivo para o ajuste.",
-      });
+    if (isNaN(amount) || amount === 0) {
+      toast({ variant: "destructive", title: "Valor Inválido", description: "Por favor, insira um valor numérico válido." });
+      return;
+    }
+    if (!reason) {
+      toast({ variant: "destructive", title: "Motivo Inválido", description: "Por favor, forneça um motivo para o ajuste." });
       return;
     }
 
     setIsAdjusting(true);
 
-    const userDocRef = doc(firestore, "users", searchedUser.id);
-    const transactionsColRef = collection(firestore, "users", searchedUser.id, "transactions");
-
     try {
-      // Use a transaction for atomic update
-      await runTransaction(firestore, async (transaction) => {
-        transaction.update(userDocRef, { 
-            credits: increment(amount),
-            score: increment(amount) 
-        });
-        
-        const newTransactionRef = doc(transactionsColRef);
-        transaction.set(newTransactionRef, {
-            description: adjustmentReason.trim(),
-            amount: amount,
-            createdAt: serverTimestamp(),
-        });
-      });
-        
-      toast({
-        title: "Saldo Ajustado!",
-        description: `O saldo de ${searchedUser.email} foi ajustado em ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount)}.`,
-      });
+      const usersRef = collection(firestore, "users");
+      const userQuery = query(usersRef, where("email", "==", email));
+      const userSnapshot = await getDocs(userQuery);
 
-      // Refresh user data on screen
-      const updatedUserDoc = await getDoc(userDocRef);
-      if (updatedUserDoc.exists()) {
-        setSearchedUser({ id: updatedUserDoc.id, ...updatedUserDoc.data() } as SearchedUser);
+      if (userSnapshot.empty) {
+        toast({ variant: "destructive", title: "Usuário não encontrado", description: `Nenhum usuário encontrado com o e-mail ${email}.` });
+        setIsAdjusting(false);
+        return;
       }
 
+      const userDoc = userSnapshot.docs[0];
+      const userDocRef = doc(firestore, "users", userDoc.id);
+      const transactionsColRef = collection(firestore, "users", userDoc.id, "transactions");
+
+      await runTransaction(firestore, async (transaction) => {
+        transaction.update(userDocRef, {
+          credits: increment(amount),
+          score: increment(amount)
+        });
+        const newTransactionRef = doc(transactionsColRef);
+        transaction.set(newTransactionRef, {
+          description: reason,
+          amount: amount,
+          createdAt: serverTimestamp(),
+        });
+      });
+
+      toast({
+        title: "Saldo Ajustado!",
+        description: `O saldo de ${email} foi ajustado em ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount)}.`,
+      });
+
+      if (searchedUser && searchedUser.id === userDoc.id) {
+        const updatedUserDoc = await getDoc(userDocRef);
+        if (updatedUserDoc.exists()) {
+          setSearchedUser({ id: updatedUserDoc.id, ...updatedUserDoc.data() } as SearchedUser);
+        }
+      }
+
+      setAdjustmentEmail("");
       setAdjustmentAmount("");
       setAdjustmentReason("");
     } catch (error) {
@@ -246,38 +255,71 @@ export default function AdminPage() {
 
        <Card>
         <CardHeader>
-          <CardTitle>Consultar Usuário</CardTitle>
+          <CardTitle>Gerenciamento de Contas</CardTitle>
           <CardDescription>
-            Busque um usuário pelo e-mail para gerenciar a conta.
+            Consulte ou ajuste o saldo de um usuário.
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleUserSearch}>
-          <CardContent className="flex flex-col md:flex-row gap-2">
-            <Input
-              type="email"
-              placeholder="Digite o e-mail do usuário"
-              value={searchEmail}
-              onChange={(e) => setSearchEmail(e.target.value)}
-              required
-              className="w-full"
-            />
-            <Button type="submit" disabled={isSearching} className="md:w-auto w-full shrink-0">
-              {isSearching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Buscar"}
-            </Button>
-          </CardContent>
-        </form>
+        <CardContent>
+            <h3 className="font-semibold mb-2 text-base">Consultar Usuário</h3>
+             <form onSubmit={handleUserSearch} className="flex flex-col md:flex-row gap-2">
+              <Input
+                type="email"
+                placeholder="Digite o e-mail para ver detalhes"
+                value={searchEmail}
+                onChange={(e) => setSearchEmail(e.target.value)}
+                required
+                className="w-full"
+              />
+              <Button type="submit" disabled={isSearching} className="md:w-auto w-full shrink-0">
+                {isSearching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Buscar"}
+              </Button>
+            </form>
+        </CardContent>
         {searchMessage && !searchedUser && !searchedUserWithdrawals && (
-          <CardFooter>
+          <CardFooter className="py-0">
             <p className="text-sm text-destructive">{searchMessage}</p>
           </CardFooter>
         )}
+        
+        <Separator className="my-4" />
+
+        <CardHeader className="pt-0">
+             <h3 className="font-semibold text-base">Adicionar Saldo Manualmente</h3>
+        </CardHeader>
+        <CardContent className="flex w-full flex-col gap-2">
+              <Input
+                  type="email"
+                  placeholder="E-mail do usuário"
+                  value={adjustmentEmail}
+                  onChange={(e) => setAdjustmentEmail(e.target.value)}
+                  disabled={isAdjusting}
+              />
+              <Input
+                  type="number"
+                  placeholder="Valor (ex: 10.50 ou -5.00)"
+                  value={adjustmentAmount}
+                  onChange={(e) => setAdjustmentAmount(e.target.value)}
+                  disabled={isAdjusting}
+              />
+              <Input
+                  type="text"
+                  placeholder="Motivo do ajuste (ex: Bônus, Correção)"
+                  value={adjustmentReason}
+                  onChange={(e) => setAdjustmentReason(e.target.value)}
+                  disabled={isAdjusting}
+              />
+              <Button onClick={handleAdjustCredits} disabled={isAdjusting || !adjustmentEmail || !adjustmentAmount || !adjustmentReason} className="w-full">
+                  {isAdjusting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Aplicar Ajuste"}
+              </Button>
+        </CardContent>
       </Card>
 
       {searchedUser && (
         <Card>
           <CardHeader>
-            <CardTitle>Gerenciar Usuário</CardTitle>
-            <CardDescription>Detalhes e ajuste de saldo para {searchedUser.email}</CardDescription>
+            <CardTitle>Resultado da Busca</CardTitle>
+            <CardDescription>Detalhes da conta para {searchedUser.email}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -289,28 +331,6 @@ export default function AdminPage() {
               <p className="text-sm text-muted-foreground"><strong>Membro desde:</strong> {searchedUser.registrationDate?.toDate().toLocaleDateString('pt-BR') ?? 'N/A'}</p>
             </div>
           </CardContent>
-          <CardFooter className="flex-col items-start gap-4 border-t pt-4">
-             <h4 className="font-semibold">Ajuste Manual de Saldo</h4>
-              <div className="flex w-full flex-col gap-2">
-                  <Input
-                      type="number"
-                      placeholder="Valor (ex: 10.50 ou -5.00)"
-                      value={adjustmentAmount}
-                      onChange={(e) => setAdjustmentAmount(e.target.value)}
-                      disabled={isAdjusting}
-                  />
-                  <Input
-                      type="text"
-                      placeholder="Motivo do ajuste (ex: Bônus, Correção)"
-                      value={adjustmentReason}
-                      onChange={(e) => setAdjustmentReason(e.target.value)}
-                      disabled={isAdjusting}
-                  />
-                  <Button onClick={handleAdjustCredits} disabled={isAdjusting || !adjustmentAmount || !adjustmentReason} className="w-full">
-                      {isAdjusting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Aplicar Ajuste"}
-                  </Button>
-              </div>
-          </CardFooter>
         </Card>
       )}
 
