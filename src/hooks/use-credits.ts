@@ -16,9 +16,9 @@ export function useCredits() {
   const { data: userData, isLoading: isUserDocLoading } = useDoc<{credits: number}>(userDocRef);
 
   const updateCredits = useCallback((amount: number) => {
-      if (!userDocRef) return;
+      if (!userDocRef) return Promise.reject(new Error("Referência do usuário não encontrada."));
       // Use increment for atomic updates, which is safer for currency.
-      updateDoc(userDocRef, {
+      return updateDoc(userDocRef, {
           credits: increment(amount),
           score: increment(amount),
           saldo: increment(amount)

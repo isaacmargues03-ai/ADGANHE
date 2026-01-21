@@ -26,13 +26,14 @@ export function useTransactions() {
   const { data: transactions, isLoading: isTransactionsLoading } = useCollection<Omit<Transaction, 'id'>>(transactionsQuery);
 
   const addTransaction = useCallback((transactionDetails: { description: string, amount: number }) => {
-    if (user && firestore) {
-      const transactionsColRef = collection(firestore, "users", user.uid, "transactions");
-      addDoc(transactionsColRef, {
-        ...transactionDetails,
-        createdAt: serverTimestamp()
-      });
+    if (!user || !firestore) {
+      return Promise.reject(new Error("Usuário ou Firestore não disponível."));
     }
+    const transactionsColRef = collection(firestore, "users", user.uid, "transactions");
+    return addDoc(transactionsColRef, {
+      ...transactionDetails,
+      createdAt: serverTimestamp()
+    });
   }, [user, firestore]);
   
   const loading = isUserLoading || isTransactionsLoading;

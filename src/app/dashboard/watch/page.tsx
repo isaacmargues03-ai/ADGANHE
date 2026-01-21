@@ -81,30 +81,34 @@ export default function WatchPage() {
     }
   };
 
-  const resgatarRecompensa = () => {
-    if (isProcessing) return;
+  const resgatarRecompensa = async () => {
+    if (isProcessing || cliques < totalNecessario) return;
 
     setIsProcessing(true);
 
     try {
-      if (cliques >= totalNecessario) {
-        updateCredits(rewardAmount);
-        addTransaction({ description: "Recompensa de Tarefa", amount: rewardAmount });
-        toast({
-          title: "Recompensa Resgatada!",
-          description: `Parabéns! R$ ${rewardAmount.toFixed(2)} adicionados à sua carteira.`,
-        });
-        setCliques(0);
-      }
+      // 1. Await the credit update
+      await updateCredits(rewardAmount);
+
+      // 2. If credit update is successful, then add transaction record
+      await addTransaction({ description: "Recompensa de Tarefa", amount: rewardAmount });
+      
+      // 3. Notify user and reset state
+      toast({
+        title: "Recompensa Resgatada!",
+        description: `Parabéns! R$ ${rewardAmount.toFixed(2)} adicionados à sua carteira.`,
+      });
+      setCliques(0);
+
     } catch (error) {
         console.error("Erro ao resgatar recompensa:", error);
         toast({
             variant: "destructive",
-            title: "Erro",
-            description: "Não foi possível resgatar a recompensa.",
+            title: "Erro ao Resgatar",
+            description: "Não foi possível aplicar sua recompensa. Por favor, tente novamente mais tarde.",
         });
     } finally {
-      setTimeout(() => setIsProcessing(false), 2000);
+      setIsProcessing(false);
     }
   };
   
